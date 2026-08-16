@@ -5,7 +5,6 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors());
-// Static files load karne ke liye
 app.use(express.static(path.join(__dirname)));
 
 const HISTORY_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json";
@@ -22,11 +21,10 @@ app.get('/api/wingo', async (req, res) => {
         ]);
 
         const historyList = histRes.data?.data?.list || [];
-        const liveData = liveRes.data?.current || {};
+        const liveData = liveRes.data?.data || {}; // Check if it's data.data or data.current
         const lastWin = historyList[0] || {};
-        const nextP = liveData.issueNumber || "-";
+        const nextP = liveData.issueNumber || (parseInt(lastWin.issueNumber) + 1).toString();
 
-        // --- DEEP ANALYSIS LOGIC (50 PERIODS) ---
         let smallCount = 0, bigCount = 0;
         const analysisData = historyList.slice(0, 50);
         analysisData.forEach(item => {
@@ -37,11 +35,12 @@ app.get('/api/wingo', async (req, res) => {
         const bigPercent = analysisData.length > 0 ? Math.round((bigCount / analysisData.length) * 100) : 50;
         const smallPercent = 100 - bigPercent;
 
-        if (nextP !== lastPeriod && nextP !== "-") {
+        if (nextP !== lastPeriod) {
             lastPeriod = nextP;
             let finalNum;
-            if (bigPercent > 60) finalNum = Math.floor(Math.random() * 5); 
-            else if (smallPercent > 60) finalNum = Math.floor(Math.random() * 5) + 5;
+            // Simple logic: Trend ke hisaab se random number
+            if (bigPercent > 60) finalNum = Math.floor(Math.random() * 5) + 5; 
+            else if (smallPercent > 60) finalNum = Math.floor(Math.random() * 5);
             else finalNum = Math.floor(Math.random() * 10);
 
             cachedPrediction = {
@@ -65,9 +64,8 @@ app.get('/api/wingo', async (req, res) => {
     }
 });
 
-// Root route: Isse panel open hoga
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(3000, '0.0.0.0', () => console.log("Deep Analysis Server Live on Port 3000"));
+app.listen(3000, () => console.log("Server running on http://localhost:3000"));
