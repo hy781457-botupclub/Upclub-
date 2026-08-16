@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UPCLUB LIVE ADMIN - DEEP ANALYSIS</title>
+<style>
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;font-family:Arial,sans-serif;background:#080d19;color:#fff;min-height:100vh;}
+    .header{background:#10182b;border-bottom:1px solid #263453;padding:18px 16px;position:sticky;top:0;z-index:10;}
+    .header-inner{max-width:1000px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:15px;}
+    .logo{font-size:21px;font-weight:800;}.logo span{color:#35e98b;}
+    .status{display:flex;align-items:center;gap:7px;font-size:13px;color:#9da9c4;}
+    .dot{width:9px;height:9px;border-radius:50%;background:#777;}
+    .dot.live{background:#35e98b;box-shadow:0 0 10px #35e98b;}
+    .container{max-width:1000px;margin:auto;padding:20px 15px 40px;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));gap:10px;}
+    .card{background:#111a2d;border:1px solid #253350;border-radius:15px;padding:18px;text-align:center;}
+    .card-label{color:#8794b0;font-size:10px;margin-bottom:10px;text-transform:uppercase;}
+    .card-value{font-size:20px;font-weight:800;}
+    .main-number{margin-top:15px;text-align:center;padding:28px 15px;}
+    .number{font-size:72px;font-weight:900;color:#35e98b;}
+    .api-box{background:#070b14;border:1px solid #202b43;border-radius:10px;padding:14px;max-height:200px;overflow:auto;margin-top:15px;}
+    pre{color:#c8d4ec;font-size:11px;margin:0;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">UPCLUB <span>LIVE</span> ADMIN</div>
+    <div class="status"><div id="statusDot" class="dot"></div> <span id="statusText">Connecting...</span></div>
+  </div>
+</header>
+
+<main class="container">
+  <section class="grid">
+    <div class="card"><div class="card-label">Current Period</div><div id="issue" class="card-value">—</div></div>
+    <div class="card"><div class="card-label">Winning Number</div><div id="number" class="card-value">—</div></div>
+    <div class="card"><div class="card-label">Small % (50P)</div><div id="smallPercent" class="card-value" style="color:#35e98b;">0%</div></div>
+    <div class="card"><div class="card-label">Big % (50P)</div><div id="bigPercent" class="card-value" style="color:#ff4050;">0%</div></div>
+    <div class="card"><div class="card-label">Next Period</div><div id="nextIssue" class="card-value">—</div></div>
+    <div class="card" style="border-color:#35e98b;"><div class="card-label" style="color:#35e98b;">Future Prediction</div><div id="nextNumber" class="card-value" style="color:#35e98b;">—</div></div>
+  </section>
+
+  <section class="card main-number">
+    <div class="card-label">Next Number Prediction</div>
+    <div id="bigNumberDisplay" class="number">—</div>
+  </section>
+
+  <section class="card api-box">
+    <div class="card-label">Deep Analysis Debug</div>
+    <pre id="raw">Waiting for server data...</pre>
+  </section>
+</main>
+
+<script>
+async function loadData(){
+  try{
+    const response = await fetch("/api/wingo?t=" + Date.now());
+    if(!response.ok) throw new Error("Server Offline");
+    
+    const data = await response.json();
+    document.getElementById("raw").textContent = JSON.stringify(data, null, 2);
+
+    if(data.ok){
+      document.getElementById("issue").textContent = data.current.period;
+      document.getElementById("number").textContent = data.current.number;
+      document.getElementById("smallPercent").textContent = data.analysis.small_percent;
+      document.getElementById("bigPercent").textContent = data.analysis.big_percent;
+      document.getElementById("nextIssue").textContent = data.next.period;
+      
+      const predNum = data.next.predicted_number;
+      const predSize = data.next.predicted_size;
+      
+      document.getElementById("nextNumber").textContent = predNum + " | " + predSize;
+      document.getElementById("bigNumberDisplay").textContent = predNum;
+
+      document.getElementById("statusDot").className = "dot live";
+      document.getElementById("statusText").textContent = "DEEP API CONNECTED";
+    }
+  } catch(e) {
+    document.getElementById("statusText").textContent = "OFFLINE";
+    document.getElementById("statusDot").className = "dot";
+    console.error("Error:", e);
+  }
+}
+setInterval(loadData, 3000); // 3 seconds refresh for better accuracy
+loadData();
+</script>
+</body>
+</html>
