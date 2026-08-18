@@ -7,14 +7,12 @@ const PORT = process.env.PORT || 3000;
 const REFRESH_INTERVAL = parseInt(process.env.REFRESH_INTERVAL || '1000', 10); // 1s default
 const DISPLAY_OFFSET = parseInt(process.env.DISPLAY_OFFSET || '15', 10); // seconds
 
-if (!MONGO_URI) {
-  console.error('MONGO_URI not set. Set it in environment.');
-  process.exit(1);
-}
+const DEMO_MODE = !MONGO_URI; // if no MONGO_URI, run in demo mode
 
 const app = express();
 app.use(cors());
 app.use(express.static('public'));
+app.use(express.json());
 
 let dbClient;
 let db;
@@ -22,6 +20,10 @@ let currentResult = null;
 const sseClients = new Set();
 
 async function connectDB() {
+  if (DEMO_MODE) {
+    console.log('No MONGO_URI provided — running in DEMO mode');
+    return;
+  }
   dbClient = new MongoClient(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
   await dbClient.connect();
   db = dbClient.db(); // default DB from URI
@@ -29,6 +31,9 @@ async function connectDB() {
 }
 
 async function fetchLatestFromDB() {
+  if (DEMO_MODE) {
+    return currentResult; // in demo mode rely on manual seed
+  }
   // Assumes collection name 'results' and documents like { period: Number, number: String, source: 'wingo', white_label: true, createdAt: Date }
   const coll = db.collection('results');
   return await coll.find({ source: 'wingo', white_label: true })
@@ -53,6 +58,7 @@ function broadcastSSE(event, data) {
   }
 }
 
+// Polling loop — in DEMO mode this will just check currentResult; in real mode it queries DB
 setInterval(async () => {
   try {
     const latest = await fetchLatestFromDB();
@@ -60,7 +66,7 @@ setInterval(async () => {
 
     // If new period or a recent result within DISPLAY_OFFSET, update
     const isNewPeriod = !currentResult || latest.period !== currentResult.period;
-    const isRecent = isWithinDisplayOffset(latest);
+    const isRecent = isWithinDisplayOffset(latest) || DEMO_MODE; // allow demo to show immediately
 
     if (isNewPeriod && isRecent) {
       currentResult = latest;
@@ -106,12 +112,40 @@ app.get('/events', (req, res) => {
   req.on('close', () => { sseClients.delete(res); });
 });
 
+// Admin endpoint to set demo result quickly (unguarded). Use only if you trust the network.
+// Example: POST /admin/set with JSON { "period": 123456, "number": "04-15-20", "ageSeconds": 5 }
+app.post('/admin/set', (req, res) => {
+  const { period, number, ageSeconds } = req.body || {};
+  if (!period || !number) return res.status(400).json({ error: 'period and number required' });
+  const createdAt = new Date(Date.now() - ((ageSeconds || 0) * 1000)).toISOString();
+  currentResult = { period, number, source: 'wingo', white_label: true, createdAt };
+  broadcastSSE('current', currentResult);
+  console.log('Admin set currentResult:', currentResult);
+  return res.json({ ok: true, currentResult });
+});
+
+// Convenience GET endpoint: /admin/set?period=...&number=...&age=5
+app.get('/admin/set', (req, res) => {
+  const { period, number, age } = req.query;
+  if (!period || !number) return res.status(400).send('period and number query params required');
+  const createdAt = new Date(Date.now() - ((parseInt(age || '0', 10)) * 1000)).toISOString();
+  currentResult = { period: parseInt(period, 10), number: String(number), source: 'wingo', white_label: true, createdAt };
+  broadcastSSE('current', currentResult);
+  console.log('Admin GET set currentResult:', currentResult);
+  return res.send('ok');
+});
+
 (async function start() {
   try {
     await connectDB();
-    // initialize currentResult immediately
-    currentResult = await fetchLatestFromDB();
-    app.listen(PORT, () => console.log(`Server listening on ${PORT} (offset=${DISPLAY_OFFSET}s, poll=${REFRESH_INTERVAL}ms)`));
+    // initialize currentResult immediately with a safe demo value if DEMO_MODE
+    if (DEMO_MODE && !currentResult) {
+      const createdAt = new Date().toISOString();
+      currentResult = { period: 999999, number: '00-00-00', source: 'wingo', white_label: true, createdAt };
+    } else {
+      currentResult = await fetchLatestFromDB();
+    }
+    app.listen(PORT, () => console.log(`Server listening on ${PORT} (offset=${DISPLAY_OFFSET}s, poll=${REFRESH_INTERVAL}ms) DEMO_MODE=${DEMO_MODE}`));
   } catch (err) {
     console.error('Startup error:', err);
     process.exit(1);
