@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>UPCLUB LIVE ADMIN</title>
+<!-- PWA manifest -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#10182b">
+<!-- iOS support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="UPCLUB LIVE">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/icons/icon-192.svg">
 <style>
     *{box-sizing:border-box;}
     html,body{margin:0;padding:0;font-family:Arial,sans-serif;background:#080d19;color:#fff;min-height:100vh;}
@@ -70,6 +78,15 @@ async function fetchData() {
 
 fetchData();
 setInterval(fetchData, 3000);
+
+// Register service worker for PWA (caching/offline & add-to-home)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('ServiceWorker registered', reg.scope))
+            .catch(err => console.warn('ServiceWorker registration failed', err));
+    });
+}
 </script>
 
 </body>
