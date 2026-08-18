@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
 // ==================== MongoDB Connection ====================
-const MONGO_URI = "mongodb+srv://admin:password@cluster0.mongodb.net/upclub?retryWrites=true&w=majority";
+const MONGO_URI = "mongodb+srv://upclub:Upclub123@cluster0.mongodb.net/upclub?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log("✅ MongoDB Connected Successfully"))
@@ -55,11 +55,14 @@ app.get('/api/wingo', async (req, res) => {
 
         // Save Live Data to MongoDB
         if (currentPeriod !== "-" && currentNumber !== "-") {
-            const newLiveData = new LiveData({
-                period: currentPeriod,
-                number: currentNumber
-            });
-            await newLiveData.save();
+            const existingData = await LiveData.findOne({ period: currentPeriod });
+            if (!existingData) {
+                const newLiveData = new LiveData({
+                    period: currentPeriod,
+                    number: currentNumber
+                });
+                await newLiveData.save();
+            }
         }
 
         // Next Period Logic
