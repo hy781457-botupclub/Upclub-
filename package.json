@@ -1,24 +1,21 @@
 {
-  "name": "wingo-panel",
-  "version": "1.0.1",
-  "description": "Wingo Live Prediction Panel",
+  "name": "upclub-admin-panel",
+  "version": "1.0.0",
+  "description": "Admin panel serving current Wingo white-label results",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "start:prod": "NODE_ENV=production node index.js",
-    "pm2:start": "pm2 start ecosystem.config.js --env production",
-    "pm2:stop": "pm2 stop ecosystem.config.js",
-    "docker:build": "docker build -t wingo-panel .",
-    "docker:up": "docker-compose up -d --build",
-    "docker:down": "docker-compose down"
+    "dev": "nodemon index.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "axios": "^1.6.2",
     "cors": "^2.8.5",
-    "ioredis": "^5.3.2"
+    "express": "^4.18.2",
+    "mongodb": "^5.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18"
   }
 }
