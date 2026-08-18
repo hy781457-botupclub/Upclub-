@@ -173,7 +173,7 @@ setInterval(() => {
 
 // ==================== API Endpoints ====================
 
-// 1. Get WinGo Data with Prediction
+// 1. Get WinGo Data with Prediction (unchanged)
 app.get('/api/wingo', async (req, res) => {
     // If circuit open, skip live fetch and return cache immediately
     if (Date.now() < circuitOpenUntil) {
@@ -248,6 +248,64 @@ app.get('/api/wingo', async (req, res) => {
     }
 });
 
+// NEW: Lightweight endpoint that returns ONLY the current period & number (white-label mother API)
+app.get('/api/current', async (req, res) => {
+    // If circuit is open, return cached current only
+    if (Date.now() < circuitOpenUntil) {
+        return res.json({
+            ok: true,
+            source: 'cache',
+            lastFetchAt,
+            current: {
+                period: lastSuccessfulData?.current?.issueNumber ?? '-',
+                number: lastSuccessfulData?.current?.number ?? '-'
+            }
+        });
+    }
+
+    try {
+        const resp = await fetchWithRetry(`${MOTHER_API_URL}?ts=${Date.now()}`, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json'
+            },
+            timeout: DEFAULT_TIMEOUT
+        });
+
+        const data = resp.data;
+        const liveData = data?.data ?? data ?? {};
+
+        // update cache
+        lastSuccessfulData = liveData;
+        lastFetchAt = new Date().toISOString();
+
+        // compute prediction in background but do not return it here
+        computePredictionIfNeeded(liveData);
+        persistCacheToRedis().catch(() => {});
+
+        return res.json({
+            ok: true,
+            source: 'live',
+            lastFetchAt,
+            current: {
+                period: liveData.current?.issueNumber ?? '-',
+                number: liveData.current?.number ?? '-'
+            }
+        });
+    } catch (e) {
+        console.warn('Live fetch failed in /api/current, returning cached current:', e.message);
+        return res.json({
+            ok: true,
+            source: 'cache',
+            lastFetchAt,
+            current: {
+                period: lastSuccessfulData?.current?.issueNumber ?? '-',
+                number: lastSuccessfulData?.current?.number ?? '-'
+            }
+        });
+    }
+});
+
 // 2. Health endpoint
 app.get('/health', (req, res) => {
     res.json({ ok: true, lastFetchAt, cachePresent: cachedPrediction !== null, circuitOpen: Date.now() < circuitOpenUntil });
@@ -291,5 +349,6 @@ app.listen(PORT, () => {
     console.log(`🚀 WinGo Panel running on http://localhost:${PORT}`);
     console.log('📊 API Endpoints:');
     console.log('   • GET /api/wingo - Current & Next prediction');
+    console.log('   • GET /api/current - Current period & number only (white-label)');
     console.log('   • GET /health - Service health');
 });
