@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const cors = require('cors');
+const Redis = require('ioredis');
 const app = express();
 
 app.use(cors());
@@ -14,11 +15,46 @@ const DEFAULT_TIMEOUT = 10000; // ms
 const RETRIES = 3;
 const INITIAL_BACKOFF = 500; // ms
 const CACHE_REFRESH_INTERVAL = 15 * 1000; // 15s background refresh
+const REDIS_URL = process.env.REDIS_URL || null; // optional
+const CIRCUIT_FAILURE_THRESHOLD = 5; // open circuit after this many consecutive failures
+const CIRCUIT_OPEN_MS = 60 * 1000; // keep open for 60s
 
 let lastPeriod = "";
 let cachedPrediction = null; // last computed prediction object
 let lastSuccessfulData = null; // last raw data from mother API
 let lastFetchAt = null; // timestamp of last successful fetch
+
+// Circuit breaker state
+let consecutiveFailures = 0;
+let circuitOpenUntil = 0;
+
+// ==================== Redis (optional persistent cache) ====================
+let redis = null;
+const REDIS_CACHE_KEY = 'wingo:lastSuccessfulData';
+const REDIS_PRED_KEY = 'wingo:cachedPrediction';
+
+if (REDIS_URL) {
+    redis = new Redis(REDIS_URL);
+    redis.on('connect', () => console.info('Connected to Redis'));
+    redis.on('error', (e) => console.error('Redis error:', e.message));
+
+    // load cached values from Redis on startup if present
+    (async () => {
+        try {
+            const raw = await redis.get(REDIS_CACHE_KEY);
+            const pred = await redis.get(REDIS_PRED_KEY);
+            if (raw) {
+                lastSuccessfulData = JSON.parse(raw);
+            }
+            if (pred) {
+                cachedPrediction = JSON.parse(pred);
+            }
+            if (lastSuccessfulData) console.info('Loaded lastSuccessfulData from Redis');
+        } catch (e) {
+            console.warn('Failed to load cache from Redis:', e.message);
+        }
+    })();
+}
 
 // ==================== Helpers ====================
 function sleep(ms) {
@@ -30,11 +66,19 @@ async function fetchWithRetry(url, options = {}, retries = RETRIES, backoff = IN
     while (attempt <= retries) {
         try {
             const resp = await axios.get(url, options);
+            // success -> reset failures
+            consecutiveFailures = 0;
             return resp;
         } catch (err) {
             attempt++;
+            consecutiveFailures++;
             const isLast = attempt > retries;
             console.warn(`Fetch attempt ${attempt} failed${isLast ? ' (final)' : ''}:`, err.message);
+            if (consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD) {
+                circuitOpenUntil = Date.now() + CIRCUIT_OPEN_MS;
+                console.warn(`Circuit opened until ${new Date(circuitOpenUntil).toISOString()}`);
+                throw new Error('Circuit opened due to repeated failures');
+            }
             if (isLast) throw err;
             await sleep(backoff);
             backoff *= 2;
@@ -72,7 +116,23 @@ function computePredictionIfNeeded(liveData) {
     return { currentPeriod, currentNumber, nextPeriod };
 }
 
+async function persistCacheToRedis() {
+    if (!redis) return;
+    try {
+        if (lastSuccessfulData) await redis.set(REDIS_CACHE_KEY, JSON.stringify(lastSuccessfulData));
+        if (cachedPrediction) await redis.set(REDIS_PRED_KEY, JSON.stringify(cachedPrediction));
+    } catch (e) {
+        console.warn('Failed to persist cache to Redis:', e.message);
+    }
+}
+
 async function refreshCache() {
+    // circuit breaker: if open, skip trying to fetch
+    if (Date.now() < circuitOpenUntil) {
+        console.warn('Circuit is open, skipping fetch');
+        return { ok: false, error: 'circuit_open' };
+    }
+
     try {
         const resp = await fetchWithRetry(`${MOTHER_API_URL}?ts=${Date.now()}`, {
             headers: {
@@ -93,6 +153,9 @@ async function refreshCache() {
         // compute prediction if period changed
         computePredictionIfNeeded(liveData);
 
+        // persist to Redis if available
+        await persistCacheToRedis();
+
         console.info('Cache refreshed from mother API at', lastFetchAt);
         return { ok: true, liveData };
     } catch (err) {
@@ -112,6 +175,25 @@ setInterval(() => {
 
 // 1. Get WinGo Data with Prediction
 app.get('/api/wingo', async (req, res) => {
+    // If circuit open, skip live fetch and return cache immediately
+    if (Date.now() < circuitOpenUntil) {
+        console.warn('Circuit open: returning cached data');
+        return res.json({
+            ok: true,
+            source: 'cache',
+            lastFetchAt,
+            warning: 'Circuit open - returning cached data',
+            current: {
+                period: lastSuccessfulData?.current?.issueNumber ?? '-',
+                number: lastSuccessfulData?.current?.number ?? '-'
+            },
+            next: {
+                period: lastPeriod,
+                predicted: cachedPrediction
+            }
+        });
+    }
+
     // Try a fresh fetch but do not block longer than RETRIES/backoff (fetchWithRetry has timeouts)
     try {
         const resp = await fetchWithRetry(`${MOTHER_API_URL}?ts=${Date.now()}`, {
@@ -130,6 +212,9 @@ app.get('/api/wingo', async (req, res) => {
         lastFetchAt = new Date().toISOString();
 
         const { currentPeriod, currentNumber, nextPeriod } = computePredictionIfNeeded(liveData);
+
+        // persist to Redis if available (best-effort)
+        persistCacheToRedis().catch(e => console.warn('persistCacheToRedis failed:', e.message));
 
         return res.json({
             ok: true,
@@ -152,7 +237,7 @@ app.get('/api/wingo', async (req, res) => {
             lastFetchAt,
             warning: 'Live fetch failed, returning cached data',
             current: {
-                period: lastSuccessfulData?.current?.issueNumber ?? (lastSuccessfulData?.current?.issueNumber ?? '-') ,
+                period: lastSuccessfulData?.current?.issueNumber ?? '-',
                 number: lastSuccessfulData?.current?.number ?? '-'
             },
             next: {
@@ -165,7 +250,7 @@ app.get('/api/wingo', async (req, res) => {
 
 // 2. Health endpoint
 app.get('/health', (req, res) => {
-    res.json({ ok: true, lastFetchAt, cachePresent: cachedPrediction !== null });
+    res.json({ ok: true, lastFetchAt, cachePresent: cachedPrediction !== null, circuitOpen: Date.now() < circuitOpenUntil });
 });
 
 // 3. Serve HTML
@@ -173,14 +258,31 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// ==================== Process-level safety ====================
+// ==================== Process-level safety / graceful shutdown ====================
+async function shutdown(signal) {
+    console.info(`Received ${signal} - shutting down gracefully`);
+    try {
+        if (redis) {
+            await redis.quit();
+            console.info('Redis connection closed');
+        }
+    } catch (e) {
+        console.warn('Error while closing Redis:', e.message);
+    }
+    // allow process manager to restart or exit
+    process.exit(0);
+}
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection:', reason);
-    // Keep process alive; log for operator to investigate. Prefer external process manager to restart if needed.
+    // Do not exit immediately; rely on process manager to restart if needed
 });
 process.on('uncaughtException', (err) => {
     console.error('Uncaught Exception:', err);
-    // We don't immediately exit to avoid downtime; let the process manager handle restarts if needed.
+    // Do not exit immediately; rely on process manager to restart if needed
 });
 
 // ==================== Server Start ====================
