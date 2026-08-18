@@ -19,7 +19,13 @@ let cachedPrediction = null;
 // 1. Get WinGo Data with Prediction
 app.get('/api/wingo', async (req, res) => {
     try {
-        const response = await axios.get(`${MOTHER_API_URL}?ts=${Date.now()}`);
+        const response = await axios.get(`${MOTHER_API_URL}?ts=${Date.now()}`, {
+            headers: { 
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json'
+            },
+            timeout: 10000 
+        });
         const liveData = response.data?.data || {};
 
         const currentPeriod = liveData.current?.issueNumber || "-";
