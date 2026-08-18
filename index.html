@@ -58,35 +58,57 @@
 </main>
 
 <script>
-async function fetchData() {
+// Real-time listener via Server-Sent Events (SSE)
+function startSSE() {
+    if (typeof EventSource === 'undefined') return false;
     try {
-        const res = await fetch('/api/wingo');
+        const es = new EventSource('/events');
+        es.addEventListener('current', (e) => {
+            try {
+                const d = JSON.parse(e.data);
+                document.getElementById('issue').textContent = d.period || '—';
+                document.getElementById('number').textContent = d.number || '—';
+                document.getElementById('apiData').textContent = JSON.stringify({ current: { period: d.period, number: d.number }, lastFetchAt: d.lastFetchAt }, null, 2);
+                document.getElementById('statusDot').className = 'dot live';
+                document.getElementById('statusText').textContent = 'Live (SSE)';
+            } catch (err) {
+                console.warn('Failed to parse SSE data', err);
+            }
+        });
+        es.onerror = (err) => {
+            console.warn('SSE error', err);
+            document.getElementById('statusDot').className = 'dot error';
+            document.getElementById('statusText').textContent = 'SSE error';
+            // Keep fallback polling
+        };
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+async function fetchDataOnce() {
+    try {
+        const res = await fetch('/api/current');
         const data = await res.json();
-        
         document.getElementById('issue').textContent = data.current?.period || "—";
         document.getElementById('number').textContent = data.current?.number || "—";
-        document.getElementById('prediction').textContent = data.next?.predicted?.number || "—";
         document.getElementById('apiData').textContent = JSON.stringify(data, null, 2);
-        
         document.getElementById('statusDot').className = 'dot live';
-        document.getElementById('statusText').textContent = 'Live';
+        document.getElementById('statusText').textContent = 'Live (poll)';
     } catch (e) {
         document.getElementById('statusDot').className = 'dot error';
         document.getElementById('statusText').textContent = 'Offline';
     }
 }
 
-fetchData();
-setInterval(fetchData, 3000);
-
-// Register service worker for PWA (caching/offline & add-to-home)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then(reg => console.log('ServiceWorker registered', reg.scope))
-            .catch(err => console.warn('ServiceWorker registration failed', err));
-    });
+// Start SSE and if not supported, fallback to polling
+const sseStarted = startSSE();
+if (!sseStarted) {
+    fetchDataOnce();
+    setInterval(fetchDataOnce, 3000);
 }
+
 </script>
 
 </body>

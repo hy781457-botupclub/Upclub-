@@ -20,6 +20,7 @@ const CIRCUIT_FAILURE_THRESHOLD = 5; // open circuit after this many consecutive
 const CIRCUIT_OPEN_MS = 60 * 1000; // keep open for 60s
 
 let lastPeriod = "";
+let lastSentPeriod = null; // last period we've pushed to SSE clients
 let cachedPrediction = null; // last computed prediction object
 let lastSuccessfulData = null; // last raw data from mother API
 let lastFetchAt = null; // timestamp of last successful fetch
@@ -126,6 +127,20 @@ async function persistCacheToRedis() {
     }
 }
 
+// ==================== SSE (Server-Sent Events) ====================
+const sseClients = new Set();
+function sendSSE(event, data) {
+    const payload = `event: ${event}\n` + `data: ${JSON.stringify(data)}\n\n`;
+    for (const res of sseClients) {
+        try {
+            res.write(payload);
+        } catch (e) {
+            // ignore write errors; client cleanup happens on 'close'
+        }
+    }
+}
+
+// ==================== Cache refresh ====================
 async function refreshCache() {
     // circuit breaker: if open, skip trying to fetch
     if (Date.now() < circuitOpenUntil) {
@@ -151,7 +166,14 @@ async function refreshCache() {
         lastFetchAt = new Date().toISOString();
 
         // compute prediction if period changed
-        computePredictionIfNeeded(liveData);
+        const { currentPeriod, currentNumber } = computePredictionIfNeeded(liveData);
+
+        // If current period changed compared to lastSentPeriod, push to SSE clients immediately
+        if (currentPeriod && currentPeriod !== lastSentPeriod) {
+            lastSentPeriod = currentPeriod;
+            sendSSE('current', { period: currentPeriod, number: currentNumber, lastFetchAt });
+            console.info('Pushed SSE current event for period', currentPeriod);
+        }
 
         // persist to Redis if available
         await persistCacheToRedis();
@@ -212,6 +234,13 @@ app.get('/api/wingo', async (req, res) => {
         lastFetchAt = new Date().toISOString();
 
         const { currentPeriod, currentNumber, nextPeriod } = computePredictionIfNeeded(liveData);
+
+        // If current period changed compared to lastSentPeriod, push to SSE clients immediately
+        if (currentPeriod && currentPeriod !== lastSentPeriod) {
+            lastSentPeriod = currentPeriod;
+            sendSSE('current', { period: currentPeriod, number: currentNumber, lastFetchAt });
+            console.info('Pushed SSE current event for period', currentPeriod);
+        }
 
         // persist to Redis if available (best-effort)
         persistCacheToRedis().catch(e => console.warn('persistCacheToRedis failed:', e.message));
@@ -280,7 +309,15 @@ app.get('/api/current', async (req, res) => {
         lastFetchAt = new Date().toISOString();
 
         // compute prediction in background but do not return it here
-        computePredictionIfNeeded(liveData);
+        const { currentPeriod, currentNumber } = computePredictionIfNeeded(liveData);
+
+        // push update if period changed
+        if (currentPeriod && currentPeriod !== lastSentPeriod) {
+            lastSentPeriod = currentPeriod;
+            sendSSE('current', { period: currentPeriod, number: currentNumber, lastFetchAt });
+            console.info('Pushed SSE current event for period', currentPeriod);
+        }
+
         persistCacheToRedis().catch(() => {});
 
         return res.json({
@@ -304,6 +341,41 @@ app.get('/api/current', async (req, res) => {
             }
         });
     }
+});
+
+// SSE endpoint for real-time updates
+app.get('/events', (req, res) => {
+    // Set headers for SSE
+    res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*'
+    });
+    res.write('\n');
+
+    // send initial comment
+    res.write(': connected\n\n');
+
+    sseClients.add(res);
+    console.info('SSE client connected, total clients:', sseClients.size);
+
+    // send current data immediately if available
+    if (lastSuccessfulData && lastSuccessfulData.current) {
+        const cp = lastSuccessfulData.current.issueNumber ?? '-';
+        const cn = lastSuccessfulData.current.number ?? '-';
+        res.write(`event: current\ndata: ${JSON.stringify({ period: cp, number: cn, lastFetchAt })}\n\n`);
+        lastSentPeriod = cp;
+    }
+
+    // Trigger an immediate fetch to try to get the freshest data when a client connects
+    refreshCache().catch(() => {});
+
+    req.on('close', () => {
+        sseClients.delete(res);
+        try { res.end(); } catch (e) {}
+        console.info('SSE client disconnected, total clients:', sseClients.size);
+    });
 });
 
 // 2. Health endpoint
@@ -350,5 +422,6 @@ app.listen(PORT, () => {
     console.log('📊 API Endpoints:');
     console.log('   • GET /api/wingo - Current & Next prediction');
     console.log('   • GET /api/current - Current period & number only (white-label)');
+    console.log('   • GET /events - Server-Sent Events for real-time updates');
     console.log('   • GET /health - Service health');
 });
