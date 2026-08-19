@@ -1,1 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPCLUB LIVE ADMIN - MOTHER SYNC</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0b0e11; color: white; text-align: center; padding: 20px; }
+        .dashboard { max-width: 500px; margin: auto; background: #151921; padding: 25px; border-radius: 15px; border: 1px solid #2b2f3a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .card { background: #1e232d; padding: 15px; border-radius: 10px; margin: 15px 0; border-left: 5px solid #4ecca3; }
+        .label { font-size: 14px; color: #9aa4bf; text-transform: uppercase; letter-spacing: 1px; }
+        .value { font-size: 28px; font-weight: bold; color: #4ecca3; margin-top: 5px; }
+        .prediction { color: #f0b90b; border-left-color: #f0b90b; }
+        .status { font-size: 12px; color: #00ff00; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <h2>UPCLUB LIVE ADMIN</h2>
+        <div id="statusText" class="status">● Mother API Connected (NowNodes)</div>
+        
+        <div class="card">
+            <div class="label">Current Period</div>
+            <div id="period" class="value">-</div>
+        </div>
 
+        <div class="card">
+            <div class="label">Winning Number</div>
+            <div id="result" class="value">-</div>
+        </div>
+
+        <div class="card">
+            <div class="label">Next Period</div>
+            <div id="nextPeriod" class="value">-</div>
+        </div>
+
+        <div class="card prediction">
+            <div class="label">Live Prediction</div>
+            <div id="prediction" class="value">Wait...</div>
+        </div>
+    </div>
+
+    <script>
+        async function updateDashboard() {
+            try {
+                const res = await fetch('/api/wingo');
+                const data = await res.json();
+                
+                if (data.ok) {
+                    document.getElementById('period').innerText = data.period;
+                    document.getElementById('result').innerText = data.result;
+                    document.getElementById('nextPeriod').innerText = data.next;
+                    
+                    // प्रेडिक्शन दिखाना (NowNodes Logic)
+                    if (data.predicted) {
+                        document.getElementById('prediction').innerText = 
+                            data.predicted.size + " (" + data.predicted.color + ")";
+                    }
+                    document.getElementById('statusText').style.color = "#00ff00";
+                    document.getElementById('statusText').innerText = "● Mother API Live";
+                } else {
+                    document.getElementById('statusText').innerText = "○ Syncing Data...";
+                    document.getElementById('statusText').style.color = "orange";
+                }
+            } catch (e) {
+                document.getElementById('statusText').innerText = "○ Connection Lost";
+                document.getElementById('statusText').style.color = "red";
+            }
+        }
+
+        setInterval(updateDashboard, 2000);
+        updateDashboard();
+    </script>
+</body>
+  </html>
