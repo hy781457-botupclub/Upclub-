@@ -9,11 +9,10 @@ app.use(express.static(path.join(__dirname)));
 
 const PORT = process.env.PORT || 10000;
 const MY_KEY = "ab8eb981-1229-4cd7-b00c-a275ea6a97de";
-// NowNodes के लिए सही URL फॉर्मेट
-const RPC_URL = "https://eth.nownodes.io/" + MY_KEY;
 
 app.get('/api/wingo', async (req, res) => {
     try {
+        // NowNodes को सही तरीके से POST रिक्वेस्ट भेजना
         const response = await axios.post('https://eth.nownodes.io', {
             jsonrpc: "2.0",
             method: "eth_blockNumber",
@@ -22,7 +21,7 @@ app.get('/api/wingo', async (req, res) => {
         }, {
             headers: { 
                 'Content-Type': 'application/json',
-                'api-key': MY_KEY // Key को यहाँ भेजना ही सही तरीका है
+                'api-key': MY_KEY // Key को हेडर में भेजना अनिवार्य है
             }
         });
 
@@ -41,17 +40,15 @@ app.get('/api/wingo', async (req, res) => {
                 }
             });
         } else {
-            console.log("Auth/Node Error:", response.data);
-            res.json({ ok: false, error: "Invalid Key or Plan" });
+            res.json({ ok: false, error: "Node Error" });
         }
     } catch (e) {
-        // अगर 404 आता है, तो यहाँ एरर मैसेज दिखेगा
-        console.error("Connection Error:", e.response ? e.response.status : e.message);
-        res.json({ ok: false, error: "Source Not Found" });
+        console.error("RPC Error:", e.response ? e.response.status : e.message);
+        res.json({ ok: false, error: "Syncing..." });
     }
 });
 
-// Frontend Files Serve करना
+// HTML फाइल सर्व करना
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -60,4 +57,4 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
