@@ -14,20 +14,22 @@ const RPC_URL = "https://eth.nownodes.io/" + MY_KEY;
 
 app.get('/api/wingo', async (req, res) => {
     try {
-        const response = await axios.post(RPC_URL, {
+        const response = await axios.post('https://eth.nownodes.io', {
             jsonrpc: "2.0",
             method: "eth_blockNumber",
             params: [],
             id: 1
         }, {
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 
+                'Content-Type': 'application/json',
+                'api-key': MY_KEY // Key को यहाँ भेजना ही सही तरीका है
+            }
         });
 
         if (response.data && response.data.result) {
             const hexBlock = response.data.result;
             const blockNumber = parseInt(hexBlock, 16);
 
-            // लाइव डेटा रिस्पॉन्स
             res.json({
                 ok: true,
                 period: blockNumber.toString().slice(-6),
@@ -39,13 +41,13 @@ app.get('/api/wingo', async (req, res) => {
                 }
             });
         } else {
-            // अगर Key गलत है या प्लान एक्टिव नहीं है तो यहाँ एरर आएगी
-            console.log("Auth Error Details:", response.data);
-            res.json({ ok: false, error: "Authentication Failed" });
+            console.log("Auth/Node Error:", response.data);
+            res.json({ ok: false, error: "Invalid Key or Plan" });
         }
     } catch (e) {
-        console.error("Connection Error:", e.message);
-        res.json({ ok: false, error: "Node Connection Failed" });
+        // अगर 404 आता है, तो यहाँ एरर मैसेज दिखेगा
+        console.error("Connection Error:", e.response ? e.response.status : e.message);
+        res.json({ ok: false, error: "Source Not Found" });
     }
 });
 
