@@ -17,7 +17,7 @@
 <body>
     <div class="dashboard">
         <h2>UPCLUB LIVE ADMIN</h2>
-        <div class="status">● Mother API Connected (SSE)</div>
+        <div id="statusText" class="status">● Mother API Connected (NowNodes)</div>
         
         <div class="card">
             <div class="label">Current Period</div>
@@ -43,7 +43,6 @@
     <script>
         async function updateDashboard() {
             try {
-                // सीधे रेंडर सर्वर से डेटा फेच करना
                 const res = await fetch('/api/wingo');
                 const data = await res.json();
                 
@@ -52,18 +51,23 @@
                     document.getElementById('result').innerText = data.result;
                     document.getElementById('nextPeriod').innerText = data.next;
                     
-                    // प्रेडिक्शन दिखाना
+                    // प्रेडिक्शन दिखाना (NowNodes Logic)
                     if (data.predicted) {
                         document.getElementById('prediction').innerText = 
-                            data.predicted.number + " (" + data.predicted.size + ")";
+                            data.predicted.size + " (" + data.predicted.color + ")";
                     }
+                    document.getElementById('statusText').style.color = "#00ff00";
+                    document.getElementById('statusText').innerText = "● Mother API Live";
+                } else {
+                    document.getElementById('statusText').innerText = "○ Syncing Data...";
+                    document.getElementById('statusText').style.color = "orange";
                 }
             } catch (e) {
-                console.log("Mother API Syncing...");
+                document.getElementById('statusText').innerText = "○ Connection Lost";
+                document.getElementById('statusText').style.color = "red";
             }
         }
 
-        // हर 2 सेकंड में डेटा अपडेट करना (Zero Lag)
         setInterval(updateDashboard, 2000);
         updateDashboard();
     </script>
