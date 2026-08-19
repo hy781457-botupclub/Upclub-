@@ -1,11 +1,18 @@
 {
-  "name": "wingo-panel",
+  "name": "upclub-panel",
   "version": "1.0.0",
+  "description": "Wingo Live Panel with WSS",
   "main": "index.js",
-  "scripts": { "start": "node index.js" },
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
     "express": "^4.18.2",
     "axios": "^1.6.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "ws": "^8.14.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
