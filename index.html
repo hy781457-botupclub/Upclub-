@@ -1,115 +1,75 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UPCLUB LIVE ADMIN</title>
-<!-- PWA manifest -->
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#10182b">
-<!-- iOS support -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="UPCLUB LIVE">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="/icons/icon-192.svg">
-<style>
-    *{box-sizing:border-box;}
-    html,body{margin:0;padding:0;font-family:Arial,sans-serif;background:#080d19;color:#fff;min-height:100vh;}
-    .header{background:#10182b;border-bottom:1px solid #263453;padding:18px 16px;position:sticky;top:0;z-index:10;}
-    .header-inner{max-width:1000px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:15px;}
-    .logo{font-size:21px;font-weight:800;}.logo span{color:#35e98b;}
-    .status{display:flex;align-items:center;gap:7px;font-size:13px;color:#9da9c4;}
-    .dot{width:9px;height:9px;border-radius:50%;background:#777;transition: 0.3s;}
-    .dot.live{background:#35e98b;box-shadow:0 0 10px #35e98b;}
-    .dot.error{background:#ff4050;box-shadow:0 0 10px #ff4050;}
-    .container{max-width:1000px;margin:auto;padding:20px 15px 40px;}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));gap:10px;}
-    .card{background:#111a2d;border:1px solid #253350;border-radius:15px;padding:18px;text-align:center;}
-    .card-label{color:#8794b0;font-size:10px;margin-bottom:10px;text-transform:uppercase;}
-    .card-value{font-size:20px;font-weight:800;}
-    .main-number{margin-top:15px;text-align:center;padding:28px 15px;}
-    .number{font-size:72px;font-weight:900;color:#35e98b;}
-    .api-box{background:#070b14;border:1px solid #202b43;border-radius:10px;padding:14px;max-height:200px;overflow:auto;margin-top:15px;}
-    pre{color:#c8d4ec;font-size:11px;margin:0;white-space: pre-wrap; word-break: break-all;}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPCLUB LIVE ADMIN - MOTHER SYNC</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0b0e11; color: white; text-align: center; padding: 20px; }
+        .dashboard { max-width: 500px; margin: auto; background: #151921; padding: 25px; border-radius: 15px; border: 1px solid #2b2f3a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .card { background: #1e232d; padding: 15px; border-radius: 10px; margin: 15px 0; border-left: 5px solid #4ecca3; }
+        .label { font-size: 14px; color: #9aa4bf; text-transform: uppercase; letter-spacing: 1px; }
+        .value { font-size: 28px; font-weight: bold; color: #4ecca3; margin-top: 5px; }
+        .prediction { color: #f0b90b; border-left-color: #f0b90b; }
+        .status { font-size: 12px; color: #00ff00; margin-bottom: 20px; }
+    </style>
 </head>
 <body>
+    <div class="dashboard">
+        <h2>UPCLUB LIVE ADMIN</h2>
+        <div id="statusText" class="status">● Mother API Connected (NowNodes)</div>
+        
+        <div class="card">
+            <div class="label">Current Period</div>
+            <div id="period" class="value">-</div>
+        </div>
 
-<header class="header">
-  <div class="header-inner">
-    <div class="logo">UPCLUB <span>LIVE</span> ADMIN</div>
-    <div class="status"><div id="statusDot" class="dot"></div> <span id="statusText">Connecting...</span></div>
-  </div>
-</header>
+        <div class="card">
+            <div class="label">Winning Number</div>
+            <div id="result" class="value">-</div>
+        </div>
 
-<main class="container">
-  <section class="grid">
-    <div class="card"><div class="card-label">Current Period</div><div id="issue" class="card-value">—</div></div>
-    <div class="card"><div class="card-label">Winning Number</div><div id="number" class="card-value">—</div></div>
-    <div class="card"><div class="card-label">Small %</div><div id="smallPercent" class="card-value" style="color:#35e98b;">0%</div></div>
-    <div class="card"><div class="card-label">Big %</div><div id="bigPercent" class="card-value" style="color:#ff6b35;">0%</div></div>
-  </section>
+        <div class="card">
+            <div class="label">Next Period</div>
+            <div id="nextPeriod" class="value">-</div>
+        </div>
 
-  <div class="main-number">
-    <div class="card-label">NEXT PERIOD PREDICTION</div>
-    <div class="number" id="prediction">—</div>
-    <div class="api-box"><pre id="apiData">{"status":"loading"}</pre></div>
-  </div>
-</main>
+        <div class="card prediction">
+            <div class="label">Live Prediction</div>
+            <div id="prediction" class="value">Wait...</div>
+        </div>
+    </div>
 
-<script>
-// Real-time listener via Server-Sent Events (SSE)
-function startSSE() {
-    if (typeof EventSource === 'undefined') return false;
-    try {
-        const es = new EventSource('/events');
-        es.addEventListener('current', (e) => {
+    <script>
+        async function updateDashboard() {
             try {
-                const d = JSON.parse(e.data);
-                document.getElementById('issue').textContent = d.period || '—';
-                document.getElementById('number').textContent = d.number || '—';
-                document.getElementById('apiData').textContent = JSON.stringify({ current: { period: d.period, number: d.number }, lastFetchAt: d.lastFetchAt }, null, 2);
-                document.getElementById('statusDot').className = 'dot live';
-                document.getElementById('statusText').textContent = 'Live (SSE)';
-            } catch (err) {
-                console.warn('Failed to parse SSE data', err);
+                const res = await fetch('/api/wingo');
+                const data = await res.json();
+                
+                if (data.ok) {
+                    document.getElementById('period').innerText = data.period;
+                    document.getElementById('result').innerText = data.result;
+                    document.getElementById('nextPeriod').innerText = data.next;
+                    
+                    // प्रेडिक्शन दिखाना (NowNodes Logic)
+                    if (data.predicted) {
+                        document.getElementById('prediction').innerText = 
+                            data.predicted.size + " (" + data.predicted.color + ")";
+                    }
+                    document.getElementById('statusText').style.color = "#00ff00";
+                    document.getElementById('statusText').innerText = "● Mother API Live";
+                } else {
+                    document.getElementById('statusText').innerText = "○ Syncing Data...";
+                    document.getElementById('statusText').style.color = "orange";
+                }
+            } catch (e) {
+                document.getElementById('statusText').innerText = "○ Connection Lost";
+                document.getElementById('statusText').style.color = "red";
             }
-        });
-        es.onerror = (err) => {
-            console.warn('SSE error', err);
-            document.getElementById('statusDot').className = 'dot error';
-            document.getElementById('statusText').textContent = 'SSE error';
-            // Keep fallback polling
-        };
-        return true;
-    } catch (e) {
-        return false;
-    }
-}
+        }
 
-async function fetchDataOnce() {
-    try {
-        const res = await fetch('/api/current');
-        const data = await res.json();
-        document.getElementById('issue').textContent = data.current?.period || "—";
-        document.getElementById('number').textContent = data.current?.number || "—";
-        document.getElementById('apiData').textContent = JSON.stringify(data, null, 2);
-        document.getElementById('statusDot').className = 'dot live';
-        document.getElementById('statusText').textContent = 'Live (poll)';
-    } catch (e) {
-        document.getElementById('statusDot').className = 'dot error';
-        document.getElementById('statusText').textContent = 'Offline';
-    }
-}
-
-// Start SSE and if not supported, fallback to polling
-const sseStarted = startSSE();
-if (!sseStarted) {
-    fetchDataOnce();
-    setInterval(fetchDataOnce, 3000);
-}
-
-</script>
-
+        setInterval(updateDashboard, 2000);
+        updateDashboard();
+    </script>
 </body>
 </html>
