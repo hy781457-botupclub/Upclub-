@@ -12,26 +12,31 @@ const API_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M.json";
 
 app.get('/api/wingo', async (req, res) => {
     try {
-        // सीधे मदर सोर्स से डेटा खींचना
+        // सही URL फॉर्मेट और टाइमस्टैम्प
         const response = await axios.get(`<latex>{API_URL}?ts=</latex>{Date.now()}`, {
-            headers: { 'User-Agent': 'Mozilla/5.0' }
+            headers: { 
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'application/json'
+            }
         });
 
-        const data = response.data?.data || {};
-        const current = data.current || {};
+        // डेटा स्ट्रक्चर को चेक करना
+        const apiData = response.data;
+        // ध्यान दें: अगर API सीधे ऑब्जेक्ट भेजती है तो response.data ही काफी है
+        const current = apiData?.data?.current || apiData?.current || {};
         
-        const p = current.issueNumber || "-";
-        const n = current.number || "-";
-        const next = p !== "-" ? (BigInt(p) + 1n).toString() : "-";
+        const p = current.issueNumber || "999999";
+        const n = current.number || "00-00-00";
 
         res.json({
             ok: true,
             period: p,
-            result: n, // लाइव नंबर यहाँ आएगा
-            next: next
+            result: n,
+            time: new Date().toLocaleTimeString()
         });
     } catch (e) {
-        res.status(500).json({ ok: false, error: "Syncing" });
+        console.error("Fetch Error:", e.message);
+        res.status(500).json({ ok: false, error: "Connection Error" });
     }
 });
 
