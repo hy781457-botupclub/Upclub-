@@ -5,19 +5,18 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname)));
 
 const HISTORY_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json";
 const LIVE_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M.json";
 
 let lastPeriod = "";
-let cachedPrediction = null;
+let cachedPrediction = { number: "-", size: "-", color: "-" };
 
 app.get('/api/wingo', async (req, res) => {
     try {
-        // 500 period ke liye humein multiple pages ya bada data fetch karna hoga
         const [histRes, liveRes] = await Promise.all([
-            axios.get(HISTORY_URL + "?pageSize=500&ts=" + Date.now()),
+            axios.get(HISTORY_URL + "?pageSize=50&ts=" + Date.now()),
             axios.get(LIVE_URL + "?ts=" + Date.now())
         ]);
 
@@ -28,28 +27,14 @@ app.get('/api/wingo', async (req, res) => {
 
         if (nextP !== lastPeriod && nextP !== "-") {
             lastPeriod = nextP;
-
-            // --- 500 PERIOD DEEP ANALYSIS ---
-            let counts = Array(10).fill(0);
-            historyList.forEach(item => {
-                let n = parseInt(item.number);
-                if (!isNaN(n)) counts[n]++;
-            });
-
-            // Sabse kam baar aane wala number (Cold Number Theory)
-            let predictedNum = counts.indexOf(Math.min(...counts));
+            // 50-Period Analysis Logic
+            let bigCount = historyList.slice(0, 50).filter(i => parseInt(i.number) >= 5).length;
+            let bigProb = (bigCount / 50) * 100;
             
-            // Color Logic
-            let color = "GREEN";
-            if ([1, 3, 7, 9].includes(predictedNum)) color = "GREEN";
-            else if ([2, 4, 6, 8].includes(predictedNum)) color = "RED";
-            else if (predictedNum === 0 || predictedNum === 5) color = "VIOLET";
-
-            cachedPrediction = {
-                number: predictedNum,
-                size: predictedNum >= 5 ? "BIG" : "SMALL",
-                color: color
-            };
+            let num = bigProb > 55 ? Math.floor(Math.random() * 5) : Math.floor(Math.random() * 5) + 5;
+            let color = [1,3,7,9].includes(num) ? "GREEN" : ([2,4,6,8].includes(num) ? "RED" : "VIOLET");
+            
+            cachedPrediction = { number: num, size: num >= 5 ? "BIG" : "SMALL", color: color };
         }
 
         res.json({
@@ -57,9 +42,9 @@ app.get('/api/wingo', async (req, res) => {
             current: { period: lastWin.issueNumber, number: lastWin.number },
             next: {
                 period: nextP,
-                predicted_number: cachedPrediction?.number,
-                predicted_size: cachedPrediction?.size,
-                predicted_color: cachedPrediction?.color
+                predicted_number: cachedPrediction.number,
+                predicted_size: cachedPrediction.size,
+                predicted_color: cachedPrediction.color
             }
         });
     } catch (e) {
@@ -67,5 +52,7 @@ app.get('/api/wingo', async (req, res) => {
     }
 });
 
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.listen(3000, '0.0.0.0', () => console.log("500-Period Hack Server Live"));
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
