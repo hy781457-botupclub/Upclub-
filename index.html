@@ -1,81 +1,101 @@
 <!DOCTYPE html>
 <html lang="hi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UPCLUB LIVE ADMIN - MOTHER SYNC</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0b0e11; color: white; text-align: center; padding: 20px; margin: 0; }
-        .dashboard { max-width: 500px; margin: 40px auto; background: #151921; padding: 25px; border-radius: 20px; border: 1px solid #2b2f3a; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
-        h2 { font-size: 22px; margin-bottom: 10px; letter-spacing: 1px; }
-        .card { background: #1e232d; padding: 18px; border-radius: 12px; margin: 15px 0; border-left: 6px solid #4ecca3; text-align: left; }
-        .label { font-size: 12px; color: #9aa4bf; text-transform: uppercase; font-weight: bold; }
-        .value { font-size: 30px; font-weight: 900; color: #4ecca3; margin-top: 8px; }
-        .prediction { color: #f0b90b; border-left-color: #f0b90b; }
-        .prediction .value { color: #f0b90b; }
-        .status { font-size: 14px; font-weight: bold; margin-bottom: 20px; padding: 8px; border-radius: 5px; background: rgba(0,0,0,0.2); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UPCLUB 500-PERIOD HACK ADMIN</title>
+<style>
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;font-family:Arial,sans-serif;background:#050a14;color:#fff;min-height:100vh;}
+    .header{background:#0d1526;border-bottom:2px solid #35e98b;padding:20px;text-align:center;}
+    .logo{font-size:24px;font-weight:900;letter-spacing:2px;}
+    .logo span{color:#35e98b;}
+    .status-bar{background:#162136;padding:10px;display:flex;justify-content:center;align-items:center;gap:10px;font-size:12px;}
+    .dot{width:10px;height:10px;border-radius:50%;background:#777;}
+    .dot.live{background:#35e98b;box-shadow:0 0 10px #35e98b;}
+    .container{max-width:800px;margin:auto;padding:20px;}
+    .grid{display:grid;grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;}
+    .card{background:#111a2d;border:1px solid #253350;border-radius:12px;padding:20px;text-align:center;}
+    .card-label{color:#8794b0;font-size:11px;margin-bottom:8px;text-transform:uppercase;}
+    .card-value{font-size:22px;font-weight:800;color:#35e98b;}
+    .prediction-box{background:linear-gradient(145deg, #111a2d, #0d1526);border:2px solid #35e98b;border-radius:20px;padding:40px 20px;text-align:center;margin-top:20px;}
+    .pred-num{font-size:100px;font-weight:900;margin:10px 0;text-shadow:0 0 20px rgba(53,233,139,0.3);}
+    .pred-details{font-size:24px;font-weight:bold;letter-spacing:2px;padding:10px;border-radius:10px;display:inline-block;background:#050a14;}
+    .color-dot{display:inline-block;width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-right:10px;}
+    .debug-box{margin-top:20px;background:#000;padding:15px;border-radius:10px;font-family:monospace;font-size:10px;color:#35e98b;max-height:150px;overflow:auto;}
+</style>
 </head>
 <body>
-    <div class="dashboard">
-        <h2>UPCLUB LIVE ADMIN</h2>
-        <div id="statusText" class="status" style="color: orange;">○ Connecting to Mother API...</div>
-        
-        <div class="card">
-            <div class="label">Current Period (Winner)</div>
-            <div id="period" class="value">—</div>
-        </div>
 
-        <div class="card">
-            <div class="label">Winning Number</div>
-            <div id="result" class="value">—</div>
-        </div>
+<header class="header">
+  <div class="logo">UPCLUB <span>HACK</span> PRO</div>
+</header>
+<div class="status-bar">
+  <div id="statusDot" class="dot"></div>
+  <span id="statusText">SYSTEM CONNECTING...</span>
+</div>
 
-        <div class="card">
-            <div class="label">Next Period (Active)</div>
-            <div id="nextPeriod" class="value">—</div>
-        </div>
+<main class="container">
+  <section class="grid">
+    <div class="card"><div class="card-label">Current Period</div><div id="issue">—</div></div>
+    <div class="card"><div class="card-label">Last Win Number</div><div id="number">—</div></div>
+  </section>
 
-        <div class="card prediction">
-            <div class="label">Live Prediction (RNG)</div>
-            <div id="prediction" class="value">Wait...</div>
-        </div>
-    </div>
+  <div class="card"><div class="card-label">Next Period Target</div><div id="nextIssue" style="font-size:28px; color:#fff;">—</div></div>
 
-    <script>
-        async function updateDashboard() {
-            try {
-                // सर्वर से डेटा मंगाना (Relation established)
-                const res = await fetch('/api/wingo?t=' + Date.now());
-                const data = await res.json();
-                
-                if (data.ok) {
-                    // डेटा मैपिंग (Server -> Frontend)
-                    document.getElementById('period').innerText = data.current?.period || "—";
-                    document.getElementById('result').innerText = data.current?.number || "—";
-                    document.getElementById('nextPeriod').innerText = data.next?.period || "—";
-                    
-                    const predNum = data.next?.number ?? "—";
-                    const size = (predNum !== "—" && predNum >= 5) ? "BIG" : "SMALL";
-                    
-                    document.getElementById('prediction').innerText = predNum + " | " + size;
-                    
-                    document.getElementById('statusText').style.color = "#4ecca3";
-                    document.getElementById('statusText').innerText = "● Mother API Live (Connected)";
-                } else {
-                    document.getElementById('statusText').innerText = "○ Syncing Data...";
-                    document.getElementById('statusText').style.color = "#f0b90b";
-                }
-            } catch (e) {
-                document.getElementById('statusText').innerText = "○ Connection Lost";
-                document.getElementById('statusText').style.color = "#ff4d4d";
-                console.error("Fetch Error:", e);
-            }
-        }
+  <section class="prediction-box">
+    <div class="card-label" style="color:#35e98b; font-size:14px;">500-Period Deep Analysis Result</div>
+    <div id="bigNumberDisplay" class="pred-num">—</div>
+    <div id="nextDetails" class="pred-details">WAITING...</div>
+  </section>
 
-        // हर 2 सेकंड में डेटा ताज़ा करना
-        setInterval(updateDashboard, 2000);
-        updateDashboard();
-    </script>
+  <section class="debug-box">
+    <div>[SYSTEM LOG]: <span id="log">Initializing 500-period history scan...</span></div>
+    <pre id="raw"></pre>
+  </section>
+</main>
+
+<script>
+async function loadData(){
+  try{
+    const response = await fetch("/api/wingo?t=" + Date.now());
+    if(!response.ok) throw new Error("Connection Lost");
+    
+    const data = await response.json();
+    
+    if(data.ok){
+      document.getElementById("issue").textContent = data.current.period;
+      document.getElementById("number").textContent = data.current.number;
+      document.getElementById("nextIssue").textContent = data.next.period;
+      
+      const num = data.next.predicted_number ?? "—";
+      const size = data.next.predicted_size || "—";
+      const color = data.next.predicted_color || "—";
+      
+      document.getElementById("bigNumberDisplay").textContent = num;
+      
+      // Color Styling
+      let colorCode = "#777";
+      if(color === "GREEN") colorCode = "#35e98b";
+      if(color === "RED") colorCode = "#ff4050";
+      if(color === "VIOLET") colorCode = "#b34dff";
+      
+      document.getElementById("nextDetails").innerHTML = 
+        `<span style="color:<latex>{colorCode}"></latex>{size}</span> | <span style="color:<latex>{colorCode}"></latex>{color}</span>`;
+      document.getElementById("bigNumberDisplay").style.color = colorCode;
+
+      document.getElementById("statusDot").className = "dot live";
+      document.getElementById("statusText").textContent = "500P ANALYSIS ACTIVE";
+      document.getElementById("log").textContent = "Analysis complete for period " + data.next.period;
+    }
+  } catch(e) {
+    document.getElementById("statusText").textContent = "OFFLINE";
+    document.getElementById("statusDot").className = "dot";
+    document.getElementById("log").textContent = "Error: " + e.message;
+  }
+}
+setInterval(loadData, 3000);
+loadData();
+</script>
 </body>
 </html>
