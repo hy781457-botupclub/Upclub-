@@ -1,18 +1,21 @@
 {
-  "name": "upclub-panel",
+  "name": "upclub-hack-pro",
   "version": "1.0.0",
-  "description": "Wingo Live Panel with WSS",
-  "main": "index.js",
+  "description": "WinGo 500-Period Deep Analysis Panel",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "axios": "^1.6.2",
     "cors": "^2.8.5",
-    "ws": "^8.14.2"
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3"
   },
   "engines": {
     "node": ">=14.0.0"
-  }
+  },
+  "author": "UpClub Admin",
+  "license": "ISC"
 }
