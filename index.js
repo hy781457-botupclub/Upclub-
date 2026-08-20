@@ -1,72 +1,71 @@
 const express = require('express');
 const axios = require('axios');
-const cors = require('cors');
 const path = require('path');
+const cors = require('cors');
 const app = express();
 
 app.use(cors());
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(__dirname));
 
-const PORT = process.env.PORT || 10000;
-const API_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M.json";
+const HISTORY_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json";
+const LIVE_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M.json";
 
-let lastP = "";
-let hackData = null;
+let lastPeriod = "";
+let cachedPrediction = null;
 
 app.get('/api/wingo', async (req, res) => {
     try {
-        const response = await axios.get(`<latex>{API_URL}?ts=</latex>{Date.now()}`, {
-            headers: { 'User-Agent': 'Mozilla/5.0' }
-        });
+        // 500 period ke liye humein multiple pages ya bada data fetch karna hoga
+        const [histRes, liveRes] = await Promise.all([
+            axios.get(HISTORY_URL + "?pageSize=500&ts=" + Date.now()),
+            axios.get(LIVE_URL + "?ts=" + Date.now())
+        ]);
 
-        const data = response.data?.data || {};
-        const history = data.list || []; // यहाँ 500 डेटा का सेट होगा
-        const current = data.current || history[0] || {};
-        
-        const period = current.issueNumber;
-        const nextPeriod = (BigInt(period) + 1n).toString();
+        const historyList = histRes.data?.data?.list || [];
+        const liveData = liveRes.data?.current || {};
+        const lastWin = historyList[0] || {};
+        const nextP = liveData.issueNumber || "-";
 
-        if (nextPeriod !== lastP) {
-            lastP = nextPeriod;
+        if (nextP !== lastPeriod && nextP !== "-") {
+            lastPeriod = nextP;
 
-            // --- Deep 500 Analysis Logic ---
-            let counts = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0};
-            let colors = {RED: 0, GREEN: 0, VIOLET: 0};
-            let smalls = 0, bigs = 0;
-
-            history.forEach(item => {
-                const n = parseInt(item.number);
-                counts[n]++;
-                if (n <= 4) smalls++; else bigs++;
-                // Color Logic
-                if ([1,3,7,9].includes(n)) colors.GREEN++;
-                else if ([2,4,6,8].includes(n)) colors.RED++;
-                else colors.VIOLET++;
+            // --- 500 PERIOD DEEP ANALYSIS ---
+            let counts = Array(10).fill(0);
+            historyList.forEach(item => {
+                let n = parseInt(item.number);
+                if (!isNaN(n)) counts[n]++;
             });
 
-            // 1. Number: जो सबसे कम आया है (Cold Number Theory)
-            const predNum = parseInt(Object.keys(counts).reduce((a, b) => counts[a] < counts[b] ? a : b));
+            // Sabse kam baar aane wala number (Cold Number Theory)
+            let predictedNum = counts.indexOf(Math.min(...counts));
             
-            // 2. Size: Trend Reversal (अगर एक पक्ष 60% से ज्यादा है तो उल्टा प्रेडिक्ट करें)
-            const predSize = smalls > bigs ? "BIG" : "SMALL";
+            // Color Logic
+            let color = "GREEN";
+            if ([1, 3, 7, 9].includes(predictedNum)) color = "GREEN";
+            else if ([2, 4, 6, 8].includes(predictedNum)) color = "RED";
+            else if (predictedNum === 0 || predictedNum === 5) color = "VIOLET";
 
-            // 3. Color: बारंबारता के आधार पर
-            const predColor = colors.RED < colors.GREEN ? "RED" : "GREEN";
-
-            hackData = { number: predNum, size: predSize, color: predColor, accuracy: "98.2%" };
+            cachedPrediction = {
+                number: predictedNum,
+                size: predictedNum >= 5 ? "BIG" : "SMALL",
+                color: color
+            };
         }
 
         res.json({
             ok: true,
-            period: period,
-            result: current.number,
-            next: nextPeriod,
-            predicted: hackData
+            current: { period: lastWin.issueNumber, number: lastWin.number },
+            next: {
+                period: nextP,
+                predicted_number: cachedPrediction?.number,
+                predicted_size: cachedPrediction?.size,
+                predicted_color: cachedPrediction?.color
+            }
         });
     } catch (e) {
-        res.status(500).json({ ok: false, error: "Analyzing..." });
+        res.status(500).json({ ok: false, error: e.message });
     }
 });
 
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.listen(PORT, () => console.log(`Hack Server Live on ${PORT}`));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.listen(3000, '0.0.0.0', () => console.log("500-Period Hack Server Live"));
