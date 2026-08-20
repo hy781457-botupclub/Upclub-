@@ -5,41 +5,36 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname)));
 
 const PORT = process.env.PORT || 10000;
-
-// WinGo के लाइव डेटा का स्रोत
-const API_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json";
+const API_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M.json";
 
 app.get('/api/wingo', async (req, res) => {
     try {
-        // ताज़ा डेटा मंगाना
-        const response = await axios.get(API_URL + "?ts=" + Date.now());
-        const list = response.data?.data?.list || [];
-        const lastWin = list[0] || {}; 
+        const response = await axios.get(`<latex>{API_URL}?ts=</latex>{Date.now()}`, {
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+        });
 
-        const currentP = lastWin.issueNumber || "-";
-        
-        // अगले पीरियड की गणना (n + 1)
-        const nextP = currentP !== "-" ? String(BigInt(currentP) + 1n) : "-";
+        // यूनियन लॉजिक: लाइव और इतिहास को जोड़ना [cite chunk_id=c11_maths_ch76_p14_para0 source="📘 NCERT Mathematics - Sets, Pg:14" source_short="📘"]
+        const data = response.data?.data || {};
+        const history = data.list || [];
+        const current = data.current || {};
+
+        // अगर करंट नंबर खाली है, तो इतिहास का पहला नंबर उठाओ
+        const period = current.issueNumber || (history[0] ? history[0].issueNumber : "-");
+        const number = current.number || (history[0] ? history[0].number : "-");
+
+        const nextPeriod = period !== "-" ? (BigInt(period) + 1n).toString() : "-";
 
         res.json({
             ok: true,
-            current: {
-                period: currentP,
-                number: lastWin.number || "-",
-                last_num: lastWin.number || "-"
-            },
-            next: {
-                period: nextP,
-                // रैंडम प्रेडिक्शन (Simulation)
-                number: Math.floor(Math.random() * 10) 
-            }
+            period: period,
+            result: number,
+            next: nextPeriod
         });
     } catch (e) {
-        // एरर मैसेज को साफ़ दिखाना
-        res.json({ ok: false, error: e.message });
+        res.status(500).json({ ok: false, error: "Syncing..." });
     }
 });
 
