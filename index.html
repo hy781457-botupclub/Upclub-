@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UPCLUB 500-PERIOD HACK ADMIN</title>
+<title>UPCLUB HACK PRO - LIVE</title>
 <style>
     *{box-sizing:border-box;}
     html,body{margin:0;padding:0;font-family:Arial,sans-serif;background:#050a14;color:#fff;min-height:100vh;}
@@ -21,7 +21,6 @@
     .prediction-box{background:linear-gradient(145deg, #111a2d, #0d1526);border:2px solid #35e98b;border-radius:20px;padding:40px 20px;text-align:center;margin-top:20px;}
     .pred-num{font-size:100px;font-weight:900;margin:10px 0;text-shadow:0 0 20px rgba(53,233,139,0.3);}
     .pred-details{font-size:24px;font-weight:bold;letter-spacing:2px;padding:10px;border-radius:10px;display:inline-block;background:#050a14;}
-    .color-dot{display:inline-block;width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-right:10px;}
     .debug-box{margin-top:20px;background:#000;padding:15px;border-radius:10px;font-family:monospace;font-size:10px;color:#35e98b;max-height:150px;overflow:auto;}
 </style>
 </head>
@@ -46,12 +45,11 @@
   <section class="prediction-box">
     <div class="card-label" style="color:#35e98b; font-size:14px;">500-Period Deep Analysis Result</div>
     <div id="bigNumberDisplay" class="pred-num">—</div>
-    <div id="nextDetails" class="pred-details">WAITING...</div>
+    <div id="nextDetails" class="pred-details">ANALYZING...</div>
   </section>
 
   <section class="debug-box">
-    <div>[SYSTEM LOG]: <span id="log">Initializing 500-period history scan...</span></div>
-    <pre id="raw"></pre>
+    <div>[SYSTEM LOG]: <span id="log">Scanning history data...</span></div>
   </section>
 </main>
 
@@ -68,17 +66,19 @@ async function loadData(){
       document.getElementById("number").textContent = data.current.number;
       document.getElementById("nextIssue").textContent = data.next.period;
       
+      // Data extraction from server response
       const num = data.next.predicted_number ?? "—";
       const size = data.next.predicted_size || "—";
       const color = data.next.predicted_color || "—";
       
+      // UI Update
       document.getElementById("bigNumberDisplay").textContent = num;
       
-      // Color Styling
+      // Color Logic for styling
       let colorCode = "#777";
       if(color === "GREEN") colorCode = "#35e98b";
-      if(color === "RED") colorCode = "#ff4050";
-      if(color === "VIOLET") colorCode = "#b34dff";
+      else if(color === "RED") colorCode = "#ff4050";
+      else if(color === "VIOLET") colorCode = "#b34dff";
       
       document.getElementById("nextDetails").innerHTML = 
         `<span style="color:<latex>{colorCode}"></latex>{size}</span> | <span style="color:<latex>{colorCode}"></latex>{color}</span>`;
@@ -86,7 +86,7 @@ async function loadData(){
 
       document.getElementById("statusDot").className = "dot live";
       document.getElementById("statusText").textContent = "500P ANALYSIS ACTIVE";
-      document.getElementById("log").textContent = "Analysis complete for period " + data.next.period;
+      document.getElementById("log").textContent = "Success: Prediction generated for " + data.next.period;
     }
   } catch(e) {
     document.getElementById("statusText").textContent = "OFFLINE";
@@ -94,6 +94,7 @@ async function loadData(){
     document.getElementById("log").textContent = "Error: " + e.message;
   }
 }
+// Refresh every 3 seconds
 setInterval(loadData, 3000);
 loadData();
 </script>
