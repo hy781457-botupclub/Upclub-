@@ -8,29 +8,38 @@ app.use(cors());
 app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 10000;
-const MY_KEY = "ab8eb981-1229-4cd7-b00c-a275ea6a97de";
+
+// WinGo के लाइव डेटा का स्रोत
+const API_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json";
 
 app.get('/api/wingo', async (req, res) => {
     try {
-        const response = await axios.post('https://bsc.nownodes.io', {
-            jsonrpc: "2.0", method: "eth_blockNumber", params: [], id: 1
-        }, {
-            headers: { 'Content-Type': 'application/json', 'api-key': MY_KEY }
-        });
+        // ताज़ा डेटा मंगाना
+        const response = await axios.get(API_URL + "?ts=" + Date.now());
+        const list = response.data?.data?.list || [];
+        const lastWin = list[0] || {}; 
 
-        const blockNum = parseInt(response.data.result, 16);
+        const currentP = lastWin.issueNumber || "-";
+        
+        // अगले पीरियड की गणना (n + 1)
+        const nextP = currentP !== "-" ? String(BigInt(currentP) + 1n) : "-";
+
         res.json({
             ok: true,
-            period: blockNum.toString().slice(-6),
-            result: (blockNum % 10).toString(),
-            next: (blockNum + 1).toString().slice(-6),
-            predicted: { 
-                size: (blockNum % 10) >= 5 ? "BIG" : "SMALL",
-                color: (blockNum % 2 === 0) ? "RED" : "GREEN"
+            current: {
+                period: currentP,
+                number: lastWin.number || "-",
+                last_num: lastWin.number || "-"
+            },
+            next: {
+                period: nextP,
+                // रैंडम प्रेडिक्शन (Simulation)
+                number: Math.floor(Math.random() * 10) 
             }
         });
     } catch (e) {
-        res.json({ ok: false, error: "Syncing..." });
+        // एरर मैसेज को साफ़ दिखाना
+        res.json({ ok: false, error: e.message });
     }
 });
 
