@@ -1,16 +1,15 @@
 {
-  "name": "upclub-panel",
+  "name": "bdg-live-hack",
   "version": "1.0.0",
-  "description": "Wingo Live Panel with WSS",
-  "main": "index.js",
+  "description": "Direct White Label Source Connection for BDG WIN",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "axios": "^1.6.2",
-    "cors": "^2.8.5",
-    "ws": "^8.14.2"
+    "cors": "^2.8.5"
   },
   "engines": {
     "node": ">=14.0.0"
