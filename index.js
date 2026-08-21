@@ -1,43 +1,40 @@
 const express = require('express');
-const WebSocket = require('ws');
+const axios = require('axios');
 const cors = require('cors');
 const app = express();
-
 app.use(cors());
 app.use(express.static(__dirname));
 
-// ASLI LIVE WSS LINK (Network tab se nikali gayi)
-const WSS_URL = "wss://ws.ar-lottery01.com/websocket"; 
+// NAYA DOMAIN JO CERTIFICATE SE MILA HAI
+const API_URL = "https://bdgwinhz.com/api/web/game/GetNoList"; 
 
-let liveHack = { period: "-", num: "?", size: "WAITING", timer: 60, color: "NONE" };
+app.get('/api/data', async (req, res) => {
+    try {
+        const response = await axios.get(API_URL + "?pageSize=50");
+        const list = response.data.data.list;
+        const current = list[0];
+        
+        const now = new Date();
+        const secondsLeft = 60 - now.getSeconds();
+        const nextPeriod = (BigInt(current.issueNumber) + 1n).toString();
 
-function connectWSS() {
-    const ws = new WebSocket(WSS_URL);
+        // 50-Period Analysis
+        let bigCount = list.filter(i => parseInt(i.number) >= 5).length;
+        let num = (bigCount / 50) > 0.5 ? Math.floor(Math.random() * 5) : Math.floor(Math.random() * 5) + 5;
+        let color = [1,3,7,9].includes(num) ? "GREEN" : "RED";
 
-    ws.on('open', () => {
-        console.log("CONNECTED TO BDG LIVE SOURCE");
-        // WinGo 1M subscribe message
-        ws.send(JSON.stringify({ "action": "subscribe", "game": "wingo1m" }));
-    });
+        res.json({
+            ok: true,
+            timer: secondsLeft,
+            period: nextPeriod,
+            hack: {
+                num: secondsLeft <= 45 ? num : "?",
+                size: secondsLeft <= 45 ? (num >= 5 ? "BIG" : "SMALL") : "WAITING",
+                color: secondsLeft <= 45 ? color : "NONE"
+            }
+        });
+    } catch (e) { res.status(500).json({ ok: false }); }
+});
 
-    ws.on('message', (data) => {
-        const msg = JSON.parse(data);
-        // Jab server agla result leak kare
-        if (msg.type === 'result_leak' || msg.type === 'upcoming') {
-            liveHack.period = msg.period;
-            liveHack.num = msg.number; // Asli leaked number
-            liveHack.size = msg.number >= 5 ? "BIG" : "SMALL";
-            liveHack.color = [1,3,7,9].includes(msg.number) ? "GREEN" : "RED";
-            liveHack.timer = msg.time_left;
-        }
-    });
-
-    ws.on('close', () => setTimeout(connectWSS, 5000)); // Auto reconnect
-}
-
-connectWSS();
-
-app.get('/api/live-data', (req, res) => res.json(liveHack));
-
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log("HACK SERVER ACTIVE"));
+app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
+app.listen(process.env.PORT || 3000);
