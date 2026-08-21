@@ -1,47 +1,21 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>BDG WIN HACK PRO</title>
-    <style>
-        body { background: #050a14; color: white; font-family: sans-serif; text-align: center; }
-        .timer-circle { border: 5px solid #35e98b; width: 150px; height: 150px; border-radius: 50%; margin: 20px auto; padding-top: 40px; }
-        .result-box { background: #111a2d; margin: 20px; padding: 30px; border-radius: 20px; border: 1px solid #35e98b; }
-        .big-num { font-size: 80px; font-weight: bold; color: #35e98b; }
-        .status { color: #35e98b; font-size: 14px; margin-bottom: 20px; }
-    </style>
-</head>
-<body>
-    <h1>BDG WIN <span>HACK</span></h1>
-    <div class="status">● LIVE CONNECTION ACTIVE</div>
-    
-    <div class="timer-circle">
-        <h2 id="timer">00:00</h2>
-        <p>TIME LEFT</p>
-    </div>
-
-    <div class="result-box">
-        <p>ROUND ID: <span id="period">---</span></p>
-        <div class="big-num" id="hack-num">?</div>
-        <h2 id="hack-details">WAITING...</h2>
-    </div>
-
-    <script>
-        async function update() {
-            const res = await fetch("/api/data");
+<script>
+    async function updateLive() {
+        try {
+            const res = await fetch("/api/live-hack");
             const data = await res.json();
-            document.getElementById("timer").textContent = `00:${data.timer < 10 ? '0'+data.timer : data.timer}`;
-            document.getElementById("period").textContent = data.period;
-            
-            if(data.timer <= 40) {
-                document.getElementById("hack-num").textContent = data.hack.num;
-                document.getElementById("hack-details").textContent = data.hack.size + " | " + data.hack.color;
-            } else {
-                document.getElementById("hack-num").textContent = "?";
-                document.getElementById("hack-details").textContent = "WAITING FOR SOURCE...";
+            if (data.ok) {
+                // Update Period and Timer
+                document.getElementById("timer").textContent = `00:${data.timer < 10 ? '0'+data.timer : data.timer}`;
+                document.getElementById("nextIssue").textContent = data.period;
+                
+                // Hamesha live result dikhaye
+                document.getElementById("bigNumberDisplay").textContent = data.hack.num;
+                document.getElementById("nextDetails").textContent = `<latex>{data.hack.size} | </latex>{data.hack.color}`;
+                
+                let color = data.hack.color === "GREEN" ? "#35e98b" : "#ff4050";
+                document.getElementById("bigNumberDisplay").style.color = color;
             }
-        }
-        setInterval(update, 1000);
-    </script>
-</body>
-</html>
+        } catch (e) { console.log("Live Sync Error"); }
+    }
+    setInterval(updateLive, 1000);
+</script>
