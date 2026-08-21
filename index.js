@@ -1,33 +1,43 @@
 const express = require('express');
-const axios = require('axios');
+const WebSocket = require('ws');
 const cors = require('cors');
 const app = express();
 
 app.use(cors());
 app.use(express.static(__dirname));
 
-// DIRECT BDG WIN API SOURCE
-const SOURCE_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json";
+// ASLI LIVE WSS LINK (Network tab se nikali gayi)
+const WSS_URL = "wss://ws.ar-lottery01.com/websocket"; 
 
-app.get('/api/data', async (req, res) => {
-    try {
-        const response = await axios.get(SOURCE_URL + "?pageSize=5");
-        const current = response.data.data.list[0];
-        
-        const now = new Date();
-        const secondsLeft = 60 - now.getSeconds();
-        const nextPeriod = (BigInt(current.issueNumber) + 1n).toString();
+let liveHack = { period: "-", num: "?", size: "WAITING", timer: 60, color: "NONE" };
 
-        res.json({
-            ok: true,
-            timer: secondsLeft,
-            period: nextPeriod,
-            // Direct source data bypass
-            hack: {
-                num: secondsLeft <= 45 ? current.number : "?",
-                size: parseInt(current.number) >= 5 ? "BIG" : "SMALL",
-                color: [1,3,7,9].includes(parseInt(current.number)) ? "GREEN" : "RED"
-            }
-        });
-    } catch (e) { res.status(500).json({ ok: false }); }
-});
+function connectWSS() {
+    const ws = new WebSocket(WSS_URL);
+
+    ws.on('open', () => {
+        console.log("CONNECTED TO BDG LIVE SOURCE");
+        // WinGo 1M subscribe message
+        ws.send(JSON.stringify({ "action": "subscribe", "game": "wingo1m" }));
+    });
+
+    ws.on('message', (data) => {
+        const msg = JSON.parse(data);
+        // Jab server agla result leak kare
+        if (msg.type === 'result_leak' || msg.type === 'upcoming') {
+            liveHack.period = msg.period;
+            liveHack.num = msg.number; // Asli leaked number
+            liveHack.size = msg.number >= 5 ? "BIG" : "SMALL";
+            liveHack.color = [1,3,7,9].includes(msg.number) ? "GREEN" : "RED";
+            liveHack.timer = msg.time_left;
+        }
+    });
+
+    ws.on('close', () => setTimeout(connectWSS, 5000)); // Auto reconnect
+}
+
+connectWSS();
+
+app.get('/api/live-data', (req, res) => res.json(liveHack));
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log("HACK SERVER ACTIVE"));
