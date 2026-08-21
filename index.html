@@ -1,21 +1,84 @@
-<script>
-    async function updateLive() {
-        try {
-            const res = await fetch("/api/live-hack");
-            const data = await res.json();
-            if (data.ok) {
-                // Update Period and Timer
-                document.getElementById("timer").textContent = `00:${data.timer < 10 ? '0'+data.timer : data.timer}`;
-                document.getElementById("nextIssue").textContent = data.period;
-                
-                // Hamesha live result dikhaye
-                document.getElementById("bigNumberDisplay").textContent = data.hack.num;
-                document.getElementById("nextDetails").textContent = `<latex>{data.hack.size} | </latex>{data.hack.color}`;
-                
-                let color = data.hack.color === "GREEN" ? "#35e98b" : "#ff4050";
-                document.getElementById("bigNumberDisplay").style.color = color;
-            }
-        } catch (e) { console.log("Live Sync Error"); }
-    }
-    setInterval(updateLive, 1000);
-</script>
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BDG WIN VIP HACK</title>
+    <style>
+        :root { --gold: #ffbf00; --bg: #050a14; --card: rgba(255, 255, 255, 0.05); }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { 
+            background: var(--bg); color: white; font-family: sans-serif; 
+            margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+        }
+        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid var(--gold); background: #0d1526; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 2px; }
+        .header span { color: var(--gold); }
+        .container { flex: 1; padding: 20px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; }
+        
+        .info-box { width: 100%; max-width: 400px; background: var(--card); border: 1px solid rgba(255,191,0,0.2); border-radius: 15px; padding: 15px; text-align: center; }
+        .label { font-size: 11px; color: #8794b0; letter-spacing: 1px; text-transform: uppercase; }
+        #period { font-size: 20px; font-weight: bold; color: var(--gold); margin-top: 5px; }
+
+        .timer-circle { width: 140px; height: 140px; border-radius: 50%; border: 4px solid var(--gold); display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(255,191,0,0.2); }
+        #timer { font-size: 36px; font-weight: 900; margin: 0; }
+
+        .result-card { width: 100%; max-width: 400px; background: rgba(255,191,0,0.05); border: 2px solid var(--gold); border-radius: 25px; padding: 30px; text-align: center; }
+        #hack-num { font-size: 110px; font-weight: 900; margin: 5px 0; line-height: 1; color: var(--gold); }
+        #hack-details { font-size: 22px; font-weight: bold; letter-spacing: 3px; color: #8794b0; }
+        
+        .status-footer { padding: 10px; font-size: 10px; color: #35e98b; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+    <div class="header"><h1>BDG WIN <span>VIP HACK</span></h1></div>
+    
+    <div class="container">
+        <div class="info-box">
+            <div class="label">Next Period ID</div>
+            <div id="period">LOADING...</div>
+        </div>
+
+        <div class="timer-circle">
+            <h2 id="timer">00:00</h2>
+            <div class="label">TIME LEFT</div>
+        </div>
+
+        <div class="result-card">
+            <div class="label" style="color:var(--gold)">Source Leaked Result</div>
+            <div id="hack-num">?</div>
+            <div id="hack-details">WAITING...</div>
+        </div>
+
+        <div class="status-footer">● SECURE API CONNECTED</div>
+    </div>
+
+    <script>
+        async function update() {
+            try {
+                const res = await fetch("/api/data");
+                const data = await res.json();
+                if (data.ok) {
+                    document.getElementById("timer").textContent = `00:${data.timer < 10 ? '0'+data.timer : data.timer}`;
+                    document.getElementById("period").textContent = data.period;
+                    
+                    if(data.timer <= 45) {
+                        document.getElementById("hack-num").textContent = data.hack.num;
+                        document.getElementById("hack-details").textContent = `<latex>{data.hack.size} | </latex>{data.hack.color}`;
+                        let color = data.hack.color === "GREEN" ? "#35e98b" : (data.hack.color === "RED" ? "#ff4050" : "#b34dff");
+                        document.getElementById("hack-num").style.color = color;
+                        document.getElementById("hack-details").style.color = color;
+                    } else {
+                        document.getElementById("hack-num").textContent = "?";
+                        document.getElementById("hack-details").textContent = "WAITING...";
+                        document.getElementById("hack-num").style.color = "#ffbf00";
+                        document.getElementById("hack-details").style.color = "#8794b0";
+                    }
+                }
+            } catch (e) { console.log("Sync Error"); }
+        }
+        setInterval(update, 1000);
+        update();
+    </script>
+</body>
+</html>
