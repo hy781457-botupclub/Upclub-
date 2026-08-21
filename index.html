@@ -2,46 +2,57 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BDG WIN HACK PRO</title>
     <style>
-        body { background: #050a14; color: white; font-family: sans-serif; text-align: center; }
-        .timer-circle { border: 5px solid #35e98b; width: 150px; height: 150px; border-radius: 50%; margin: 20px auto; padding-top: 40px; }
-        .result-box { background: #111a2d; margin: 20px; padding: 30px; border-radius: 20px; border: 1px solid #35e98b; }
-        .big-num { font-size: 80px; font-weight: bold; color: #35e98b; }
-        .status { color: #35e98b; font-size: 14px; margin-bottom: 20px; }
+        body { background: #050a14; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
+        .timer-circle { border: 5px solid #35e98b; width: 120px; height: 120px; border-radius: 50%; margin: 20px auto; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 15px #35e98b; }
+        .result-box { background: #111a2d; margin: 20px auto; padding: 30px; border-radius: 20px; border: 1px solid #253350; max-width: 400px; }
+        .big-num { font-size: 80px; font-weight: bold; color: #35e98b; margin: 10px 0; }
+        .period-text { color: #8794b0; font-size: 14px; }
+        .status { color: #35e98b; font-size: 12px; margin-bottom: 20px; letter-spacing: 1px; }
+        h1 span { color: #35e98b; }
     </style>
 </head>
 <body>
-    <h1>BDG WIN <span>HACK</span></h1>
-    <div class="status">● LIVE CONNECTION ACTIVE</div>
+    <h1>UPCLUB <span>HACK</span></h1>
+    <div class="status">● LIVE SOURCE CONNECTED</div>
     
     <div class="timer-circle">
-        <h2 id="timer">00:00</h2>
-        <p>TIME LEFT</p>
+        <h2 id="timer" style="margin:0;">00:00</h2>
+        <p style="margin:0; font-size:10px;">TIME LEFT</p>
     </div>
 
     <div class="result-box">
-        <p>ROUND ID: <span id="period">---</span></p>
+        <p class="period-text">ROUND ID: <span id="period" style="color:white;">---</span></p>
         <div class="big-num" id="hack-num">?</div>
-        <h2 id="hack-details">WAITING...</h2>
+        <h2 id="hack-details" style="color:#8794b0;">WAITING...</h2>
     </div>
 
     <script>
         async function update() {
-            const res = await fetch("/api/data");
-            const data = await res.json();
-            document.getElementById("timer").textContent = `00:${data.timer < 10 ? '0'+data.timer : data.timer}`;
-            document.getElementById("period").textContent = data.period;
-            
-            if(data.timer <= 40) {
-                document.getElementById("hack-num").textContent = data.hack.num;
-                document.getElementById("hack-details").textContent = data.hack.size + " | " + data.hack.color;
-            } else {
-                document.getElementById("hack-num").textContent = "?";
-                document.getElementById("hack-details").textContent = "WAITING FOR SOURCE...";
-            }
+            try {
+                const res = await fetch("/api/data");
+                const data = await res.json();
+                if (data.ok) {
+                    const sec = data.timer;
+                    document.getElementById("timer").textContent = `00:${sec < 10 ? '0'+sec : sec}`;
+                    document.getElementById("period").textContent = data.period;
+                    
+                    if(sec <= 40) {
+                        document.getElementById("hack-num").textContent = data.hack.num;
+                        document.getElementById("hack-details").textContent = data.hack.size + " | " + data.hack.color;
+                        document.getElementById("hack-num").style.color = "#35e98b";
+                    } else {
+                        document.getElementById("hack-num").textContent = "?";
+                        document.getElementById("hack-details").textContent = "WAITING FOR SOURCE...";
+                        document.getElementById("hack-num").style.color = "#8794b0";
+                    }
+                }
+            } catch (e) { console.log("Update Error"); }
         }
         setInterval(update, 1000);
+        update();
     </script>
 </body>
 </html>
