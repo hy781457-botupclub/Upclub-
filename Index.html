@@ -1,81 +1,47 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UPCLUB LIVE ADMIN - MOTHER SYNC</title>
+    <title>BDG WIN HACK PRO</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0b0e11; color: white; text-align: center; padding: 20px; margin: 0; }
-        .dashboard { max-width: 500px; margin: 40px auto; background: #151921; padding: 25px; border-radius: 20px; border: 1px solid #2b2f3a; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
-        h2 { font-size: 22px; margin-bottom: 10px; letter-spacing: 1px; }
-        .card { background: #1e232d; padding: 18px; border-radius: 12px; margin: 15px 0; border-left: 6px solid #4ecca3; text-align: left; }
-        .label { font-size: 12px; color: #9aa4bf; text-transform: uppercase; font-weight: bold; }
-        .value { font-size: 30px; font-weight: 900; color: #4ecca3; margin-top: 8px; }
-        .prediction { color: #f0b90b; border-left-color: #f0b90b; }
-        .prediction .value { color: #f0b90b; }
-        .status { font-size: 14px; font-weight: bold; margin-bottom: 20px; padding: 8px; border-radius: 5px; background: rgba(0,0,0,0.2); }
+        body { background: #050a14; color: white; font-family: sans-serif; text-align: center; }
+        .timer-circle { border: 5px solid #35e98b; width: 150px; height: 150px; border-radius: 50%; margin: 20px auto; padding-top: 40px; }
+        .result-box { background: #111a2d; margin: 20px; padding: 30px; border-radius: 20px; border: 1px solid #35e98b; }
+        .big-num { font-size: 80px; font-weight: bold; color: #35e98b; }
+        .status { color: #35e98b; font-size: 14px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <div class="dashboard">
-        <h2>UPCLUB LIVE ADMIN</h2>
-        <div id="statusText" class="status" style="color: orange;">○ Connecting to Mother API...</div>
-        
-        <div class="card">
-            <div class="label">Current Period (Winner)</div>
-            <div id="period" class="value">—</div>
-        </div>
+    <h1>BDG WIN <span>HACK</span></h1>
+    <div class="status">● LIVE CONNECTION ACTIVE</div>
+    
+    <div class="timer-circle">
+        <h2 id="timer">00:00</h2>
+        <p>TIME LEFT</p>
+    </div>
 
-        <div class="card">
-            <div class="label">Winning Number</div>
-            <div id="result" class="value">—</div>
-        </div>
-
-        <div class="card">
-            <div class="label">Next Period (Active)</div>
-            <div id="nextPeriod" class="value">—</div>
-        </div>
-
-        <div class="card prediction">
-            <div class="label">Live Prediction (RNG)</div>
-            <div id="prediction" class="value">Wait...</div>
-        </div>
+    <div class="result-box">
+        <p>ROUND ID: <span id="period">---</span></p>
+        <div class="big-num" id="hack-num">?</div>
+        <h2 id="hack-details">WAITING...</h2>
     </div>
 
     <script>
-        async function updateDashboard() {
-            try {
-                // सर्वर से डेटा मंगाना (Relation established)
-                const res = await fetch('/api/wingo?t=' + Date.now());
-                const data = await res.json();
-                
-                if (data.ok) {
-                    // डेटा मैपिंग (Server -> Frontend)
-                    document.getElementById('period').innerText = data.current?.period || "—";
-                    document.getElementById('result').innerText = data.current?.number || "—";
-                    document.getElementById('nextPeriod').innerText = data.next?.period || "—";
-                    
-                    const predNum = data.next?.number ?? "—";
-                    const size = (predNum !== "—" && predNum >= 5) ? "BIG" : "SMALL";
-                    
-                    document.getElementById('prediction').innerText = predNum + " | " + size;
-                    
-                    document.getElementById('statusText').style.color = "#4ecca3";
-                    document.getElementById('statusText').innerText = "● Mother API Live (Connected)";
-                } else {
-                    document.getElementById('statusText').innerText = "○ Syncing Data...";
-                    document.getElementById('statusText').style.color = "#f0b90b";
-                }
-            } catch (e) {
-                document.getElementById('statusText').innerText = "○ Connection Lost";
-                document.getElementById('statusText').style.color = "#ff4d4d";
-                console.error("Fetch Error:", e);
+        async function update() {
+            const res = await fetch("/api/data");
+            const data = await res.json();
+            document.getElementById("timer").textContent = `00:${data.timer < 10 ? '0'+data.timer : data.timer}`;
+            document.getElementById("period").textContent = data.period;
+            
+            if(data.timer <= 40) {
+                document.getElementById("hack-num").textContent = data.hack.num;
+                document.getElementById("hack-details").textContent = data.hack.size + " | " + data.hack.color;
+            } else {
+                document.getElementById("hack-num").textContent = "?";
+                document.getElementById("hack-details").textContent = "WAITING FOR SOURCE...";
             }
         }
-
-        // हर 2 सेकंड में डेटा ताज़ा करना
-        setInterval(updateDashboard, 2000);
-        updateDashboard();
+        setInterval(update, 1000);
     </script>
 </body>
 </html>
