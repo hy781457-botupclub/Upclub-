@@ -1,102 +1,47 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UPCLUB HACK PRO - LIVE</title>
-<style>
-    *{box-sizing:border-box;}
-    html,body{margin:0;padding:0;font-family:Arial,sans-serif;background:#050a14;color:#fff;min-height:100vh;}
-    .header{background:#0d1526;border-bottom:2px solid #35e98b;padding:20px;text-align:center;}
-    .logo{font-size:24px;font-weight:900;letter-spacing:2px;}
-    .logo span{color:#35e98b;}
-    .status-bar{background:#162136;padding:10px;display:flex;justify-content:center;align-items:center;gap:10px;font-size:12px;}
-    .dot{width:10px;height:10px;border-radius:50%;background:#777;}
-    .dot.live{background:#35e98b;box-shadow:0 0 10px #35e98b;}
-    .container{max-width:800px;margin:auto;padding:20px;}
-    .grid{display:grid;grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:20px;}
-    .card{background:#111a2d;border:1px solid #253350;border-radius:12px;padding:20px;text-align:center;}
-    .card-label{color:#8794b0;font-size:11px;margin-bottom:8px;text-transform:uppercase;}
-    .card-value{font-size:22px;font-weight:800;color:#35e98b;}
-    .prediction-box{background:linear-gradient(145deg, #111a2d, #0d1526);border:2px solid #35e98b;border-radius:20px;padding:40px 20px;text-align:center;margin-top:20px;}
-    .pred-num{font-size:100px;font-weight:900;margin:10px 0;text-shadow:0 0 20px rgba(53,233,139,0.3);}
-    .pred-details{font-size:24px;font-weight:bold;letter-spacing:2px;padding:10px;border-radius:10px;display:inline-block;background:#050a14;}
-    .debug-box{margin-top:20px;background:#000;padding:15px;border-radius:10px;font-family:monospace;font-size:10px;color:#35e98b;max-height:150px;overflow:auto;}
-</style>
+    <meta charset="UTF-8">
+    <title>BDG WIN HACK PRO</title>
+    <style>
+        body { background: #050a14; color: white; font-family: sans-serif; text-align: center; }
+        .timer-circle { border: 5px solid #35e98b; width: 150px; height: 150px; border-radius: 50%; margin: 20px auto; padding-top: 40px; }
+        .result-box { background: #111a2d; margin: 20px; padding: 30px; border-radius: 20px; border: 1px solid #35e98b; }
+        .big-num { font-size: 80px; font-weight: bold; color: #35e98b; }
+        .status { color: #35e98b; font-size: 14px; margin-bottom: 20px; }
+    </style>
 </head>
 <body>
-
-<header class="header">
-  <div class="logo">UPCLUB <span>HACK</span> PRO</div>
-</header>
-<div class="status-bar">
-  <div id="statusDot" class="dot"></div>
-  <span id="statusText">SYSTEM CONNECTING...</span>
-</div>
-
-<main class="container">
-  <section class="grid">
-    <div class="card"><div class="card-label">Current Period</div><div id="issue">—</div></div>
-    <div class="card"><div class="card-label">Last Win Number</div><div id="number">—</div></div>
-  </section>
-
-  <div class="card"><div class="card-label">Next Period Target</div><div id="nextIssue" style="font-size:28px; color:#fff;">—</div></div>
-
-  <section class="prediction-box">
-    <div class="card-label" style="color:#35e98b; font-size:14px;">500-Period Deep Analysis Result</div>
-    <div id="bigNumberDisplay" class="pred-num">—</div>
-    <div id="nextDetails" class="pred-details">ANALYZING...</div>
-  </section>
-
-  <section class="debug-box">
-    <div>[SYSTEM LOG]: <span id="log">Scanning history data...</span></div>
-  </section>
-</main>
-
-<script>
-async function loadData(){
-  try{
-    const response = await fetch("/api/wingo?t=" + Date.now());
-    if(!response.ok) throw new Error("Connection Lost");
+    <h1>BDG WIN <span>HACK</span></h1>
+    <div class="status">● LIVE CONNECTION ACTIVE</div>
     
-    const data = await response.json();
-    
-    if(data.ok){
-      document.getElementById("issue").textContent = data.current.period;
-      document.getElementById("number").textContent = data.current.number;
-      document.getElementById("nextIssue").textContent = data.next.period;
-      
-      // Data extraction from server response
-      const num = data.next.predicted_number ?? "—";
-      const size = data.next.predicted_size || "—";
-      const color = data.next.predicted_color || "—";
-      
-      // UI Update
-      document.getElementById("bigNumberDisplay").textContent = num;
-      
-      // Color Logic for styling
-      let colorCode = "#777";
-      if(color === "GREEN") colorCode = "#35e98b";
-      else if(color === "RED") colorCode = "#ff4050";
-      else if(color === "VIOLET") colorCode = "#b34dff";
-      
-      document.getElementById("nextDetails").innerHTML = 
-        `<span style="color:<latex>{colorCode}"></latex>{size}</span> | <span style="color:<latex>{colorCode}"></latex>{color}</span>`;
-      document.getElementById("bigNumberDisplay").style.color = colorCode;
+    <div class="timer-circle">
+        <h2 id="timer">00:00</h2>
+        <p>TIME LEFT</p>
+    </div>
 
-      document.getElementById("statusDot").className = "dot live";
-      document.getElementById("statusText").textContent = "500P ANALYSIS ACTIVE";
-      document.getElementById("log").textContent = "Success: Prediction generated for " + data.next.period;
-    }
-  } catch(e) {
-    document.getElementById("statusText").textContent = "OFFLINE";
-    document.getElementById("statusDot").className = "dot";
-    document.getElementById("log").textContent = "Error: " + e.message;
-  }
-}
-// Refresh every 3 seconds
-setInterval(loadData, 3000);
-loadData();
-</script>
+    <div class="result-box">
+        <p>ROUND ID: <span id="period">---</span></p>
+        <div class="big-num" id="hack-num">?</div>
+        <h2 id="hack-details">WAITING...</h2>
+    </div>
+
+    <script>
+        async function update() {
+            const res = await fetch("/api/data");
+            const data = await res.json();
+            document.getElementById("timer").textContent = `00:${data.timer < 10 ? '0'+data.timer : data.timer}`;
+            document.getElementById("period").textContent = data.period;
+            
+            if(data.timer <= 40) {
+                document.getElementById("hack-num").textContent = data.hack.num;
+                document.getElementById("hack-details").textContent = data.hack.size + " | " + data.hack.color;
+            } else {
+                document.getElementById("hack-num").textContent = "?";
+                document.getElementById("hack-details").textContent = "WAITING FOR SOURCE...";
+            }
+        }
+        setInterval(update, 1000);
+    </script>
 </body>
 </html>
