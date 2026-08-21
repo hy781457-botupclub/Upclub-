@@ -1,47 +1,41 @@
 const express = require('express');
 const axios = require('axios');
-const path = require('path');
 const cors = require('cors');
 const app = express();
 
 app.use(cors());
 app.use(express.static(__dirname));
 
-const PORT = process.env.PORT || 10000;
-
-// WinGo के लाइव डेटा का स्रोत
+// BDG/WinGo API Source
 const API_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json";
 
-app.get('/api/wingo', async (req, res) => {
+app.get('/api/data', async (req, res) => {
     try {
-        // ताज़ा डेटा मंगाना
-        const response = await axios.get(API_URL + "?ts=" + Date.now());
-        const list = response.data?.data?.list || [];
-        const lastWin = list[0] || {}; 
-
-        const currentP = lastWin.issueNumber || "-";
+        const response = await axios.get(API_URL + "?pageSize=5");
+        const lastResult = response.data.data.list[0];
         
-        // अगले पीरियड की गणना (n + 1)
-        const nextP = currentP !== "-" ? String(BigInt(currentP) + 1n) : "-";
+        const now = new Date();
+        const secondsLeft = 60 - now.getSeconds();
+        
+        // Next Period ID Calculation
+        const nextPeriod = (BigInt(lastResult.issueNumber) + 1n).toString();
 
         res.json({
             ok: true,
-            current: {
-                period: currentP,
-                number: lastWin.number || "-",
-                last_num: lastWin.number || "-"
-            },
-            next: {
-                period: nextP,
-                // रैंडम प्रेडिक्शन (Simulation)
-                number: Math.floor(Math.random() * 10) 
+            timer: secondsLeft,
+            period: nextPeriod,
+            hack: {
+                num: secondsLeft <= 40 ? lastResult.number : "?",
+                size: parseInt(lastResult.number) >= 5 ? "BIG" : "SMALL",
+                color: [1,3,7,9].includes(parseInt(lastResult.number)) ? "GREEN" : "RED"
             }
         });
     } catch (e) {
-        // एरर मैसेज को साफ़ दिखाना
-        res.json({ ok: false, error: e.message });
+        res.status(500).json({ ok: false });
     }
 });
 
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.listen(PORT, () => console.log(`Server Live on ${PORT}`));
+app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log("Server Active on Port " + PORT));
