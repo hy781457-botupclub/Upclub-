@@ -31,7 +31,3 @@ app.get('/api/data', async (req, res) => {
         });
     } catch (e) { res.status(500).json({ ok: false }); }
 });
-
-app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log("BDG SOURCE CONNECTED"));
