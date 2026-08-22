@@ -3,37 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UPCLUB LIVE ADMIN</title>
+    <title>UPCLUB BDG ADMIN</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #0b0e11; color: white; text-align: center; padding: 20px; }
-        .dashboard { max-width: 400px; margin: auto; background: #151921; padding: 20px; border-radius: 20px; border: 1px solid #2b2f3a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .timer-box { font-size: 50px; font-weight: bold; color: #ffbf00; margin: 20px 0; }
-        .card { background: #1e232d; padding: 15px; border-radius: 12px; margin: 10px 0; border-left: 5px solid #4ecca3; }
-        .label { font-size: 12px; color: #9aa4bf; text-transform: uppercase; }
-        .value { font-size: 24px; font-weight: bold; color: #4ecca3; }
-        .hack-box { margin-top: 20px; padding: 20px; background: #1e232d; border-radius: 15px; border: 2px dashed #4ecca3; }
-        #hack-num { font-size: 60px; font-weight: bold; display: block; }
-        #hack-details { font-size: 18px; font-weight: bold; margin-top: 10px; }
-        .status-footer { font-size: 10px; color: #00ff00; margin-top: 20px; letter-spacing: 2px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0b0e11; color: white; text-align: center; padding: 20px; margin: 0; }
+        .dashboard { max-width: 400px; margin: 20px auto; background: #151921; padding: 25px; border-radius: 25px; border: 1px solid #2b2f3a; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
+        .timer-box { font-size: 55px; font-weight: bold; color: #ffbf00; margin: 15px 0; text-shadow: 0 0 15px rgba(255, 191, 0, 0.4); }
+        .card { background: #1e232d; padding: 15px; border-radius: 15px; margin: 10px 0; border-left: 5px solid #4ecca3; }
+        .label { font-size: 13px; color: #8794b0; text-transform: uppercase; letter-spacing: 1px; }
+        .value { font-size: 26px; font-weight: bold; color: #ffffff; margin-top: 5px; }
+        .hack-box { margin-top: 25px; padding: 25px; background: #1e232d; border-radius: 20px; border: 2px dashed #4ecca3; transition: 0.3s; }
+        #hack-num { font-size: 75px; font-weight: bold; display: block; line-height: 1; margin-bottom: 10px; }
+        #hack-details { font-size: 20px; font-weight: bold; text-transform: uppercase; }
+        .status-footer { font-size: 11px; color: #00ff00; margin-top: 25px; letter-spacing: 2px; opacity: 0.8; }
+        #status-dot { display: inline-block; width: 8px; height: 8px; background: #00ff00; border-radius: 50%; margin-right: 5px; box-shadow: 0 0 8px #00ff00; }
     </style>
 </head>
 <body>
     <div class="dashboard">
-        <h2 style="color: #4ecca3;">UPCLUB ADMIN</h2>
+        <h2 style="color: #4ecca3; margin-top: 0;">UPCLUB BDG HACK</h2>
         <div id="timer" class="timer-box">00:00</div>
         
         <div class="card">
             <div class="label">Current Period</div>
-            <div id="period" class="value">LOADING...</div>
+            <div id="period" class="value">SYNCING...</div>
         </div>
 
         <div class="hack-box">
-            <div class="label">Live Hack Result</div>
+            <div class="label" style="margin-bottom: 10px;">Live Prediction</div>
             <span id="hack-num">?</span>
             <div id="hack-details">WAITING...</div>
         </div>
 
-        <div class="status-footer">● SECURE API CONNECTED</div>
+        <div class="status-footer"><span id="status-dot"></span> SECURE PROXY ACTIVE</div>
     </div>
 
     <script>
@@ -41,31 +42,35 @@
             try {
                 const res = await fetch("/api/data");
                 const data = await res.json();
-                if (data.ok) {
-                    // टाइमर अपडेट
+                
+                if (data.ok && data.hack) {
+                    // Update Timer & Period
                     document.getElementById("timer").textContent = `00:${data.timer < 10 ? '0'+data.timer : data.timer}`;
                     document.getElementById("period").textContent = data.period;
                     
-                    // अगर टाइमर 45 सेकंड से कम है तो हैक दिखाओ
-                    if(data.timer <= 45) {
-                        document.getElementById("hack-num").textContent = data.hack.num;
-                        document.getElementById("hack-details").textContent = data.hack.size + " | " + data.hack.color;
-                        
-                        let color = data.hack.color === "GREEN" ? "#35e98b" : (data.hack.color === "RED" ? "#ff4050" : "#b34dff");
-                        document.getElementById("hack-num").style.color = color;
-                        document.getElementById("hack-details").style.color = color;
-                    } else {
-                        document.getElementById("hack-num").textContent = "?";
-                        document.getElementById("hack-details").textContent = "WAITING...";
-                        document.getElementById("hack-num").style.color = "#ffbf00";
-                        document.getElementById("hack-details").style.color = "#8794b0";
+                    // Instant Result Display (No 45s Wait)
+                    document.getElementById("hack-num").textContent = data.hack.num;
+                    document.getElementById("hack-details").textContent = data.hack.size + " | " + data.hack.color;
+                    
+                    // Dynamic Color Sync
+                    let colorCode;
+                    switch(data.hack.color) {
+                        case "GREEN": colorCode = "#35e98b"; break;
+                        case "RED": colorCode = "#ff4050"; break;
+                        case "VIOLET": colorCode = "#b34dff"; break;
+                        default: colorCode = "#ffffff";
                     }
+                    
+                    document.getElementById("hack-num").style.color = colorCode;
+                    document.getElementById("hack-details").style.color = colorCode;
+                    document.querySelector(".hack-box").style.borderColor = colorCode;
                 }
             } catch (e) { 
-                console.log("Sync Error");
-                document.getElementById("period").textContent = "OFFLINE";
+                document.getElementById("period").textContent = "RECONNECTING...";
             }
         }
+
+        // Refresh every 1 second for real-time feel
         setInterval(update, 1000);
         update();
     </script>
