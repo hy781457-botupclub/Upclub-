@@ -1,52 +1,35 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BDG WIN VIP HACK</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPCLUB LIVE ADMIN</title>
     <style>
-        :root { --gold: #ffbf00; --bg: #050a14; --card: rgba(255, 255, 255, 0.05); }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            background: var(--bg); color: white; font-family: sans-serif; 
-            margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden;
-        }
-        .header { text-align: center; padding: 20px 0; border-bottom: 2px solid var(--gold); background: #0d1526; }
-        .header h1 { margin: 0; font-size: 24px; font-weight: 900; letter-spacing: 2px; }
-        .header span { color: var(--gold); }
-        .container { flex: 1; padding: 20px; display: flex; flex-direction: column; justify-content: space-around; align-items: center; }
-        
-        .info-box { width: 100%; max-width: 400px; background: var(--card); border: 1px solid rgba(255,191,0,0.2); border-radius: 15px; padding: 15px; text-align: center; }
-        .label { font-size: 11px; color: #8794b0; letter-spacing: 1px; text-transform: uppercase; }
-        #period { font-size: 20px; font-weight: bold; color: var(--gold); margin-top: 5px; }
-
-        .timer-circle { width: 140px; height: 140px; border-radius: 50%; border: 4px solid var(--gold); display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(255,191,0,0.2); }
-        #timer { font-size: 36px; font-weight: 900; margin: 0; }
-
-        .result-card { width: 100%; max-width: 400px; background: rgba(255,191,0,0.05); border: 2px solid var(--gold); border-radius: 25px; padding: 30px; text-align: center; }
-        #hack-num { font-size: 110px; font-weight: 900; margin: 5px 0; line-height: 1; color: var(--gold); }
-        #hack-details { font-size: 22px; font-weight: bold; letter-spacing: 3px; color: #8794b0; }
-        
-        .status-footer { padding: 10px; font-size: 10px; color: #35e98b; letter-spacing: 1px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0b0e11; color: white; text-align: center; padding: 20px; }
+        .dashboard { max-width: 400px; margin: auto; background: #151921; padding: 20px; border-radius: 20px; border: 1px solid #2b2f3a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .timer-box { font-size: 50px; font-weight: bold; color: #ffbf00; margin: 20px 0; }
+        .card { background: #1e232d; padding: 15px; border-radius: 12px; margin: 10px 0; border-left: 5px solid #4ecca3; }
+        .label { font-size: 12px; color: #9aa4bf; text-transform: uppercase; }
+        .value { font-size: 24px; font-weight: bold; color: #4ecca3; }
+        .hack-box { margin-top: 20px; padding: 20px; background: #1e232d; border-radius: 15px; border: 2px dashed #4ecca3; }
+        #hack-num { font-size: 60px; font-weight: bold; display: block; }
+        #hack-details { font-size: 18px; font-weight: bold; margin-top: 10px; }
+        .status-footer { font-size: 10px; color: #00ff00; margin-top: 20px; letter-spacing: 2px; }
     </style>
 </head>
 <body>
-    <div class="header"><h1>BDG WIN <span>VIP HACK</span></h1></div>
-    
-    <div class="container">
-        <div class="info-box">
-            <div class="label">Next Period ID</div>
-            <div id="period">LOADING...</div>
+    <div class="dashboard">
+        <h2 style="color: #4ecca3;">UPCLUB ADMIN</h2>
+        <div id="timer" class="timer-box">00:00</div>
+        
+        <div class="card">
+            <div class="label">Current Period</div>
+            <div id="period" class="value">LOADING...</div>
         </div>
 
-        <div class="timer-circle">
-            <h2 id="timer">00:00</h2>
-            <div class="label">TIME LEFT</div>
-        </div>
-
-        <div class="result-card">
-            <div class="label" style="color:var(--gold)">Source Leaked Result</div>
-            <div id="hack-num">?</div>
+        <div class="hack-box">
+            <div class="label">Live Hack Result</div>
+            <span id="hack-num">?</span>
             <div id="hack-details">WAITING...</div>
         </div>
 
@@ -59,12 +42,15 @@
                 const res = await fetch("/api/data");
                 const data = await res.json();
                 if (data.ok) {
+                    // टाइमर अपडेट
                     document.getElementById("timer").textContent = `00:${data.timer < 10 ? '0'+data.timer : data.timer}`;
                     document.getElementById("period").textContent = data.period;
                     
+                    // अगर टाइमर 45 सेकंड से कम है तो हैक दिखाओ
                     if(data.timer <= 45) {
                         document.getElementById("hack-num").textContent = data.hack.num;
-                        document.getElementById("hack-details").textContent = `<latex>{data.hack.size} | </latex>{data.hack.color}`;
+                        document.getElementById("hack-details").textContent = data.hack.size + " | " + data.hack.color;
+                        
                         let color = data.hack.color === "GREEN" ? "#35e98b" : (data.hack.color === "RED" ? "#ff4050" : "#b34dff");
                         document.getElementById("hack-num").style.color = color;
                         document.getElementById("hack-details").style.color = color;
@@ -75,7 +61,10 @@
                         document.getElementById("hack-details").style.color = "#8794b0";
                     }
                 }
-            } catch (e) { console.log("Sync Error"); }
+            } catch (e) { 
+                console.log("Sync Error");
+                document.getElementById("period").textContent = "OFFLINE";
+            }
         }
         setInterval(update, 1000);
         update();
