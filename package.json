@@ -1,7 +1,7 @@
 {
-  "name": "upclub-panel",
+  "name": "upclub-bdg-hack",
   "version": "1.0.0",
-  "description": "Wingo Live Panel Engine",
+  "description": "BDG Win Secure Proxy Engine",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
