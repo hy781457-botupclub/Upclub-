@@ -21,9 +21,9 @@ app.get('/api/data', async (req, res) => {
         const blockNum = parseInt(response.data.result, 16);
         const lastDigit = blockNum % 10;
         
-        // गेम का टाइमर (1 मिनट के हिसाब से)
-        const seconds = new Date().getSeconds();
-        const timer = 60 - seconds;
+        // लाइव टाइमर लॉजिक
+        const now = new Date();
+        const timer = 60 - now.getSeconds();
 
         res.json({
             ok: true,
@@ -41,4 +41,4 @@ app.get('/api/data', async (req, res) => {
 });
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.listen(PORT, () => console.log(`Hack Panel Engine Live on ${PORT}`));
+app.listen(PORT, () => console.log(`Engine Live on ${PORT}`));
