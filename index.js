@@ -4,43 +4,54 @@ const cors = require('cors');
 const path = require('path');
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(express.static(__dirname));
 
-const MY_KEY = "ab8eb981-1229-4cd7-b00c-a275ea6a97de";
+const PORT = process.env.PORT || 10000;
+const BDG_API = "https://api.bdg88zf.com/GetWinTheLotteryResult";
 
-// NowNodes से लाइव डेटा लाने वाला फंक्शन
-async function getBlockchainData() {
+// सुरक्षित डेटा फेचिंग फंक्शन
+async function fetchBDGData() {
     try {
-        const res = await axios.post('https://bsc.nownodes.io', 
-        { jsonrpc: "2.0", method: "eth_blockNumber", params: [], id: 1 },
-        { headers: { 'api-key': MY_KEY } });
-        const block = parseInt(res.data.result, 16);
-        return {
-            period: block.toString().slice(-6),
-            num: (block % 10).toString()
-        };
-    } catch (e) { return { period: "---", num: "-" }; }
+        const response = await axios.post(BDG_API, { type: 1 }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; SM-G960F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Mobile Safari/537.36',
+                'Referer': 'https://bdg88zf.com/',
+                'Origin': 'https://bdg88zf.com'
+            },
+            timeout: 5000
+        });
+        return response.data.data || null;
+    } catch (e) {
+        return null;
+    }
 }
 
-// मास्टर रूट: जो तेरी स्क्रिप्ट मांग रही है
-app.all(['/GetLotteryCategoryList', '/GetWinTheLotteryResult', '/api/data'], async (req, res) => {
-    const data = await getBlockchainData();
-    res.json({
-        success: true,
-        ok: true, // दोनों तरह के रिस्पॉन्स के लिए
-        timer: 60 - new Date().getSeconds(),
-        period: data.period,
-        data: [{ categoryName: "WinGo", issueNumber: data.period, number: data.num }],
-        hack: { num: data.num, size: parseInt(data.num) >= 5 ? "BIG" : "SMALL", color: parseInt(data.num) % 2 === 0 ? "RED" : "GREEN" }
-    });
+// मास्टर डेटा रूट (HTML और Script दोनों के लिए)
+app.all(['/api/data', '/GetWinTheLotteryResult', '/GetLotteryCategoryList'], async (req, res) => {
+    const data = await fetchBDGData();
+    
+    if (data) {
+        const num = data.number;
+        res.json({
+            ok: true,
+            success: true,
+            timer: 60 - new Date().getSeconds(),
+            period: data.issueNumber,
+            hack: {
+                num: num,
+                size: parseInt(num) >= 5 ? "BIG" : "SMALL",
+                color: (num == 0 || num == 5) ? "VIOLET" : (num % 2 === 0 ? "RED" : "GREEN")
+            },
+            data: [{ categoryName: "WinGo", issueNumber: data.issueNumber, number: num }]
+        });
+    } else {
+        res.json({ ok: false, message: "Proxy Syncing..." });
+    }
 });
-
-// बाकी सभी Get रिक्वेस्ट के लिए खाली जवाब
-app.get('/Get*', (req, res) => res.json({ success: true, data: [] }));
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log("Master Proxy Engine Live"));
+app.listen(PORT, () => console.
