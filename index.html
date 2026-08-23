@@ -31,27 +31,39 @@
     </div>
 
     <script>
-        async function fetchDirect() {
-            try {
-                const ts = Date.now();
-                // सीधे JSON लिंक का उपयोग (Proxy के साथ)
-                const url = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?ts=" + ts;
-                const response = await fetch("https://corsproxy.io/?" + encodeURIComponent(url));
-                const data = await response.json();
-                
-                if (data && data.list) {
-                    const last = data.list[0];
-                    document.getElementById('round').innerText = "ID: " + (parseInt(last.issueNumber) + 1);
-                    const pred = last.number >= 5 ? "SMALL" : "BIG";
-                    const resCircle = document.getElementById('result');
-                    resCircle.innerText = pred;
-                    resCircle.style.color = pred === 'BIG' ? '#ff9f00' : '#00ff00';
-                    resCircle.style.borderColor = pred === 'BIG' ? '#ff9f00' : '#00ff00';
-                }
-            } catch (e) { document.getElementById('round').innerText = "RECONNECTING..."; }
+        async function fetchSafeData() {
+    const ts = Date.now();
+    const target = `https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?ts=${ts}`;
+    
+    try {
+        // VPN के साथ यह प्रॉक्सी सबसे तेज़ काम करेगी
+        const response = await fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(target));
+        const raw = await response.json();
+        const data = JSON.parse(raw.contents);
+
+        if (data && data.list) {
+            const last = data.list[0];
+            document.getElementById('round').innerText = "ID: " + (parseInt(last.issueNumber) + 1);
+            
+            // Result Logic
+            const pred = last.number >= 5 ? "SMALL" : "BIG";
+            const resCircle = document.getElementById('result');
+            resCircle.innerText = pred;
+            
+            // UI Colors
+            resCircle.style.color = pred === 'BIG' ? '#ff9f00' : '#00ff00';
+            resCircle.style.borderColor = pred === 'BIG' ? '#ff9f00' : '#00ff00';
+            
+            console.log("Data Synced Successfully via VPN");
         }
-        setInterval(fetchDirect, 3000);
-        fetchDirect();
+    } catch (e) {
+        document.getElementById('round').innerText = "ID: RECONNECTING...";
+    }
+}
+
+// समय बढ़ाकर 5 सेकंड कर दिया गया है ताकि ब्लॉक न हों
+setInterval(fetchSafeData, 5000); 
+fetchSafeData();
     </script>
 </body>
 </html>
