@@ -1,17 +1,12 @@
 {
-"name": "live-result-dashboard",
-"version": "1.0.0",
-"description": "Live Result Dashboard",
-"main": "index.js",
-"scripts": {
-"start": "node index.js"
-},
-"dependencies": {
-"express": "^4.18.2",
-"axios": "^1.6.2",
-"cors": "^2.8.5"
-},
-"engines": {
-"node": ">=14.0.0"
-}
+  "name": "bdg-predictor",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.4.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  }
 }
