@@ -98,30 +98,38 @@
     <script>
         async function fetchLive() {
     try {
-        // हम पूरा URL इस्तेमाल करेंगे ताकि कोई भ्रम न रहे
-        const response = await fetch(window.location.origin + '/api/live-result');
+        // सीधे आपके Render API से डेटा मांगना
+        const response = await fetch('/api/live-result');
         const data = await response.json();
         
-        if (data.next_period) {
-            // ID अपडेट करें
-            document.getElementById('round').innerText = "ID: ********" + String(data.next_period).slice(-5);
-            // प्रेडिक्शन अपडेट करें
-            document.getElementById('result').innerText = data.size;
+        // चेक करें कि डेटा में पीरियड और प्रेडिक्शन (Size) है या नहीं
+        if (data.next_period && data.size) {
+            // 1. पीरियड नंबर अपडेट करें
+            document.getElementById('round').innerText = "ID: " + data.next_period;
             
-            // डिजाइन अपडेट (BIG के लिए नारंगी, SMALL के लिए हरा)
-            const isBig = data.size === 'BIG';
+            // 2. रिजल्ट (BIG/SMALL) अपडेट करें
             const resCircle = document.getElementById('result');
-            resCircle.style.borderColor = isBig ? '#ff9f00' : '#00ff00';
-            resCircle.style.boxShadow = isBig ? '0 0 20px #ff9f00' : '0 0 20px #00ff00';
-            resCircle.style.color = isBig ? '#ff9f00' : '#00ff00';
+            resCircle.innerText = data.size;
+            
+            // 3. रंग बदलें (BIG के लिए नारंगी, SMALL के लिए हरा)
+            if (data.size === 'BIG') {
+                resCircle.style.borderColor = '#ff9f00';
+                resCircle.style.boxShadow = '0 0 20px #ff9f00';
+                resCircle.style.color = '#ff9f00';
+            } else {
+                resCircle.style.borderColor = '#00ff00';
+                resCircle.style.boxShadow = '0 0 20px #00ff00';
+                resCircle.style.color = '#00ff00';
+            }
         }
     } catch (e) {
-        // अगर एरर आए तो कंसोल में देखें
-        console.log("Fetch Error: ", e);
+        console.log("Syncing Error:", e);
+        document.getElementById('round').innerText = "ID: RECONNECTING...";
     }
 }
-// हर 2.5 सेकंड में डेटा अपडेट करें
-setInterval(fetchLive, 2500);
+
+// हर 2 सेकंड में डेटा रिफ्रेश करें
+setInterval(fetchLive, 2000);
 fetchLive();
     </script>
 </body>
