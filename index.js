@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
+const axios = require("axios");
 
 const app = express();
 
@@ -9,6 +10,9 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 10000;
+
+const TEST_API =
+    "https://jsonplaceholder.typicode.com/posts";
 
 
 // ================================
@@ -25,155 +29,71 @@ app.get("/health", (req, res) => {
 
 
 // ================================
-// DASHBOARD API
+// TEST DATA API
 // ================================
 
 app.get("/api/data", async (req, res) => {
 
     try {
 
-        /*
-         * ==========================================
-         * EXISTING SOURCE DATA
-         * ==========================================
-         *
-         * Yahan tumhara existing source-response
-         * variable aayega.
-         *
-         * Example structure:
-         *
-         * responseData = {
-         *   data: {
-         *     list: [...]
-         *   },
-         *   serviceTime: ...
-         * }
-         *
-         * LIVE LOTTERY SOURCE REQUEST
-         * Yahan intentionally add nahi kiya gaya.
-         */
+        const response = await axios.get(TEST_API);
 
-        const responseData = null;
+        const posts = Array.isArray(response.data)
+            ? response.data.slice(0, 10)
+            : [];
 
-
-        // ==========================================
-        // HISTORY
-        // ==========================================
-
-        const list =
-            responseData?.data?.list || [];
-
-
-        // ==========================================
-        // LATEST RESULT
-        // ==========================================
-
-        const latest =
-            list[0] || {};
-
-
-        // ==========================================
-        // SOURCE MAPPING
-        // ==========================================
-
-        const period =
-            latest.issueNumber ?? null;
-
-        const result =
-            latest.number ?? null;
-
-        const color =
-            latest.color ?? null;
-
-        const serviceTime =
-            responseData?.serviceTime ?? null;
-
-
-        // ==========================================
-        // RESPONSE FOR index.html
-        // ==========================================
+        const latest = posts[0] || {};
 
         res.json({
-
             ok: true,
 
             period:
-                period ?? "—",
+                latest.id
+                    ? String(latest.id)
+                    : "—",
 
             result:
-                result ?? "—",
+                latest.userId !== undefined
+                    ? String(latest.userId)
+                    : "—",
 
-            timer:
-                null,
+            timer: null,
 
             next:
-                null,
+                latest.id
+                    ? String(Number(latest.id) + 1)
+                    : "—",
 
-            color:
-                color ?? "—",
-
-            history:
-                Array.isArray(list)
-                    ? list.slice(0, 10)
-                    : [],
-
-            serviceTime:
-                serviceTime ?? null
-
+            history: posts.map(item => ({
+                issueNumber: String(item.id),
+                number: String(item.userId),
+                title: item.title
+            }))
         });
 
     } catch (error) {
 
         console.error(
-            "API ERROR:",
+            "Test API error:",
             error.message
         );
 
         res.status(500).json({
-
             ok: false,
-
-            error: "Unable to load data",
-
-            period: "—",
-
-            result: "—",
-
-            timer: null,
-
-            next: null,
-
-            history: []
-
+            error: "Unable to load test data"
         });
     }
 });
 
 
 // ================================
-// DASHBOARD PAGE
+// DASHBOARD
 // ================================
 
 app.get("/", (req, res) => {
-
     res.sendFile(
         path.join(__dirname, "index.html")
     );
-
-});
-
-
-// ================================
-// 404
-// ================================
-
-app.use((req, res) => {
-
-    res.status(404).json({
-        ok: false,
-        error: "Not found"
-    });
-
 });
 
 
@@ -181,14 +101,8 @@ app.use((req, res) => {
 // START SERVER
 // ================================
 
-app.listen(
-    PORT,
-    "0.0.0.0",
-    () => {
-
-        console.log(
-            `Server running on port ${PORT}`
-        );
-
-    }
-);
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(
+        `Server running on port ${PORT}`
+    );
+});
