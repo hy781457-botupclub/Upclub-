@@ -1,6 +1,6 @@
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
+const express = require("express");
+const path = require("path");
+const cors = require("cors");
 
 const app = express();
 
@@ -10,81 +10,54 @@ app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 10000;
 
-
-// ==============================
-// HEALTH CHECK
-// ==============================
-
-app.get('/health', (req, res) => {
+/*
+ * Health check
+ */
+app.get("/health", (req, res) => {
     res.json({
         ok: true,
-        server: 'live',
+        server: "live",
         time: new Date().toISOString()
     });
 });
 
-
-// ==============================
-// DATA ENDPOINT
-// ==============================
-//
-// Yahan tumhara existing data/source
-// logic apne current code se rahega.
-// Is route ka response HTML ke expected
-// format mein hona chahiye.
-//
-// {
-//   ok: true,
-//   period: "...",
-//   result: "...",
-//   timer: "...",
-//   next: "...",
-//   history: []
-// }
-//
-// ==============================
-
-app.get('/api/wingo', async (req, res) => {
-
+/*
+ * Dashboard data endpoint
+ *
+ * Yahan tumhara apna existing,
+ * non-lottery data source connect kiya ja sakta hai.
+ */
+app.get("/api/data", async (req, res) => {
     try {
-
-        // Existing source/data logic yahan rakho.
-        // Main lottery source-fetching logic add nahi kar raha.
-
         res.json({
             ok: false,
-            message: 'Data source not configured'
+            message: "Data source not configured",
+            period: "—",
+            result: "—",
+            timer: "—",
+            next: "—",
+            history: []
         });
-
     } catch (error) {
-
-        console.error('API Error:', error.message);
+        console.error(error);
 
         res.status(500).json({
             ok: false,
-            error: 'Server error'
+            error: "Server error"
         });
     }
 });
 
-
-// ==============================
-// DASHBOARD
-// ==============================
-
-app.get('/', (req, res) => {
-    res.sendFile(
-        path.join(__dirname, 'index.html')
-    );
+/*
+ * Dashboard
+ */
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "index.html"));
 });
 
-
-// ==============================
-// START SERVER
-// ==============================
-
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(
-        `Server running on port ${PORT}`
-    );
+/*
+ * Start
+ */
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on port ${PORT}`);
 });
