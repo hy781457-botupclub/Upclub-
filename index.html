@@ -1,284 +1,358 @@
-<!DOCTYPE html>  <html lang="en">  
-<head>  
-<meta charset="UTF-8">  
-<meta name="viewport" content="width=device-width,initial-scale=1.0">  <title>Live Result Dashboard</title>  <style>  
-*{box-sizing:border-box}  
-  
-body{  
-    margin:0;  
-    font-family:Arial,Helvetica,sans-serif;  
-    background:#f4f6f9;  
-    color:#222;  
-}  
-  
-.header{  
-    background:linear-gradient(135deg,#fff,#ead17a);  
-    padding:22px 18px;  
-    border-bottom:1px solid #d5b84f;  
-}  
-  
-.header h1{  
-    margin:0;  
-    color:#6d5300;  
-    font-size:24px;  
-}  
-  
-.header p{  
-    margin:6px 0 0;  
-    color:#746c55;  
-    font-size:13px;  
-}  
-  
-.container{  
-    width:100%;  
-    max-width:700px;  
-    margin:auto;  
-    padding:16px;  
-}  
-  
-.card{  
-    background:#fff;  
-    border-radius:18px;  
-    padding:20px;  
-    margin-bottom:16px;  
-    box-shadow:0 6px 22px rgba(0,0,0,.07);  
-}  
-  
-.label{  
-    font-size:12px;  
-    font-weight:bold;  
-    color:#8a7950;  
-    letter-spacing:1px;  
-    text-transform:uppercase;  
-}  
-  
-.period{  
-    margin-top:8px;  
-    font-size:18px;  
-    font-weight:bold;  
-    color:#493900;  
-    word-break:break-all;  
-}  
-  
-.result-box{  
-    margin-top:16px;  
-    height:150px;  
-    border-radius:18px;  
-    display:flex;  
-    align-items:center;  
-    justify-content:center;  
-    background:linear-gradient(145deg,#fffdf4,#f1dc8c);  
-    border:1px solid #ddc45e;  
-}  
-  
-.result{  
-    font-size:72px;  
-    font-weight:900;  
-    color:#765800;  
-}  
-  
-.timer{  
-    text-align:center;  
-    margin-top:15px;  
-}  
-  
-.timer-value{  
-    margin-top:3px;  
-    font-size:36px;  
-    font-weight:900;  
-    color:#735700;  
-}  
-  
-.next{  
-    display:flex;  
-    justify-content:space-between;  
-    align-items:center;  
-    margin-top:16px;  
-    padding:14px;  
-    border-radius:12px;  
-    background:#faf8ee;  
-}  
-  
-.next strong{  
-    color:#624900;  
-    word-break:break-all;  
-    text-align:right;  
-}  
-  
-.status{  
-    text-align:center;  
-    margin-top:15px;  
-    font-size:12px;  
-    color:#777;  
-}  
-  
-.dot{  
-    width:8px;  
-    height:8px;  
-    display:inline-block;  
-    border-radius:50%;  
-    background:#3ca45a;  
-    margin-right:5px;  
-}  
-  
-.history-row{  
-    display:flex;  
-    align-items:center;  
-    justify-content:space-between;  
-    padding:13px 0;  
-    border-bottom:1px solid #eee;  
-}  
-  
-.history-row:last-child{  
-    border-bottom:0;  
-}  
-  
-.history-period{  
-    color:#777;  
-    font-size:12px;  
-    word-break:break-all;  
-}  
-  
-.history-number{  
-    width:38px;  
-    height:38px;  
-    border-radius:50%;  
-    background:#efd879;  
-    color:#624900;  
-    display:flex;  
-    align-items:center;  
-    justify-content:center;  
-    font-weight:bold;  
-}  
-  
-.empty{  
-    text-align:center;  
-    color:#999;  
-    padding:15px 0;  
-    font-size:13px;  
-}  
-</style>  </head>  <body>  <header class="header">  
-    <h1>LIVE RESULT</h1>  
-    <p>White Label Dashboard</p>  
-</header>  <main class="container">  <section class="card">  <div class="label">Current Period</div>  
-<div id="period" class="period">—</div>  
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-<div class="result-box">  
-    <div id="result" class="result">—</div>  
-</div>  
+<title>Live Dashboard</title>
 
-<div class="timer">  
-    <div class="label">NEXT RESULT IN</div>  
-    <div id="timer" class="timer-value">—</div>  
-</div>  
+<style>
+*{
+    box-sizing:border-box;
+}
 
-<div class="next">  
-    <span>Next Period</span>  
-    <strong id="nextPeriod">—</strong>  
-</div>  
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f4f6f9;
+    color:#222;
+}
 
-<div class="status">  
-    <span class="dot"></span>  
-    LIVE API CONNECTED  
-</div>
+.header{
+    background:linear-gradient(135deg,#fff,#ead17a);
+    padding:22px 18px;
+    border-bottom:1px solid #d5b84f;
+    text-align:center;
+}
 
-</section>  <section class="card">  <div class="label" style="margin-bottom:10px">  
-    Result History  
-</div>  
+.header h1{
+    margin:0;
+    color:#6d5300;
+    font-size:24px;
+    font-weight:900;
+    letter-spacing:1px;
+}
 
-<div id="history">  
-    <div class="empty">Loading history...</div>  
-</div>
+.header p{
+    margin:6px 0 0;
+    color:#746c55;
+    font-size:13px;
+}
 
-</section>  </main>  <script>  
-async function syncDashboard(){  
-  
-    try{  
-  
-        const response = await fetch("/api/data");  
-  
-        if(!response.ok){  
-            throw new Error("API error");  
-        }  
-  
-        const data = await response.json();  
-  
-        if(!data.ok){  
-            return;  
-        }  
-  
-        document.getElementById("period").textContent =  
-            data.period ?? "—";  
-  
-        document.getElementById("result").textContent =  
-            data.result ?? data.number ?? "—";  
-  
-        document.getElementById("nextPeriod").textContent =  
-            data.next ?? data.nextPeriod ?? "—";  
-  
-        if(data.timer !== undefined){  
-            document.getElementById("timer").textContent =  
-                String(data.timer).padStart(2,"0");  
-        }else{  
-            document.getElementById("timer").textContent = "—";  
-        }  
-  
-        const historyBox =  
-            document.getElementById("history");  
-  
-        const history =  
-            Array.isArray(data.history)  
-            ? data.history  
-            : [];  
-  
-        historyBox.innerHTML = "";  
-  
-        if(history.length === 0){  
-  
-            historyBox.innerHTML =  
-                '<div class="empty">No history available</div>';  
-  
-            return;  
-        }  
-  
-        history.slice(0,10).forEach(item => {  
-  
-            const row =  
-                document.createElement("div");  
-  
-            row.className = "history-row";  
-  
-            const period =  
-                item.issueNumber ??  
-                item.period ??  
-                "—";  
-  
-            const number =  
-                item.number ??  
-                item.result ??  
-                "—";  
-  
-            row.innerHTML = `  
-                <div class="history-period">  
-                    ${period}  
-                </div>  
-  
-                <div class="history-number">  
-                    ${number}  
-                </div>  
-            `;  
-  
-            historyBox.appendChild(row);  
-        });  
-  
-    }catch(error){  
-  
-        console.log("Dashboard sync error:",error);  
-  
-    }  
-}  
-  
-syncDashboard();  
-setInterval(syncDashboard,3000);  
-</script>  </body>  
+.container{
+    width:100%;
+    max-width:700px;
+    margin:auto;
+    padding:16px;
+}
+
+.card{
+    background:#fff;
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:16px;
+    box-shadow:0 6px 22px rgba(0,0,0,.07);
+}
+
+.label{
+    font-size:12px;
+    font-weight:bold;
+    color:#8a7950;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+
+.period{
+    margin-top:8px;
+    font-size:18px;
+    font-weight:bold;
+    color:#493900;
+    word-break:break-all;
+}
+
+/* Result removed */
+
+.timer{
+    text-align:center;
+    margin-top:20px;
+    padding:20px 0;
+}
+
+.timer-value{
+    margin-top:5px;
+    font-size:42px;
+    font-weight:900;
+    color:#735700;
+}
+
+.next{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-top:16px;
+    padding:15px;
+    border-radius:12px;
+    background:#faf8ee;
+}
+
+.next strong{
+    color:#624900;
+    word-break:break-all;
+    text-align:right;
+}
+
+.status{
+    text-align:center;
+    margin-top:15px;
+    font-size:12px;
+    color:#777;
+}
+
+.dot{
+    width:8px;
+    height:8px;
+    display:inline-block;
+    border-radius:50%;
+    background:#3ca45a;
+    margin-right:5px;
+}
+
+.history-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:13px 0;
+    border-bottom:1px solid #eee;
+}
+
+.history-row:last-child{
+    border-bottom:0;
+}
+
+.history-period{
+    color:#777;
+    font-size:12px;
+    word-break:break-all;
+}
+
+.history-number{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    background:#efd879;
+    color:#624900;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+}
+
+.empty{
+    text-align:center;
+    color:#999;
+    padding:15px 0;
+    font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<header class="header">
+    <h1>LIVE RESULT</h1>
+    <p>White Label Dashboard</p>
+</header>
+
+<main class="container">
+
+<section class="card">
+
+    <div class="label">
+        Current Period
+    </div>
+
+    <div id="period" class="period">
+        —
+    </div>
+
+    <div class="timer">
+
+        <div class="label">
+            NEXT RESULT IN
+        </div>
+
+        <div id="timer" class="timer-value">
+            —
+        </div>
+
+    </div>
+
+    <div class="next">
+
+        <span>
+            Next Period
+        </span>
+
+        <strong id="nextPeriod">
+            —
+        </strong>
+
+    </div>
+
+    <div class="status">
+        <span class="dot"></span>
+        LIVE API CONNECTED
+    </div>
+
+</section>
+
+
+<section class="card">
+
+    <div
+        class="label"
+        style="margin-bottom:10px;"
+    >
+        Result History
+    </div>
+
+    <div id="history">
+        <div class="empty">
+            Loading history...
+        </div>
+    </div>
+
+</section>
+
+</main>
+
+
+<script>
+
+async function syncDashboard(){
+
+    try{
+
+        const response =
+            await fetch("/api/data");
+
+        if(!response.ok){
+            throw new Error("API error");
+        }
+
+        const data =
+            await response.json();
+
+        if(!data.ok){
+            return;
+        }
+
+
+        document.getElementById("period").textContent =
+            data.period ?? "—";
+
+
+        document.getElementById("nextPeriod").textContent =
+            data.next ?? data.nextPeriod ?? "—";
+
+
+        if(
+            data.timer !== undefined &&
+            data.timer !== null &&
+            data.timer !== ""
+        ){
+
+            document.getElementById("timer").textContent =
+                String(data.timer).padStart(2,"0");
+
+        }else{
+
+            document.getElementById("timer").textContent =
+                "—";
+
+        }
+
+
+        const historyBox =
+            document.getElementById("history");
+
+        const history =
+            Array.isArray(data.history)
+                ? data.history
+                : [];
+
+
+        historyBox.innerHTML = "";
+
+
+        if(history.length === 0){
+
+            historyBox.innerHTML =
+                '<div class="empty">No history available</div>';
+
+            return;
+        }
+
+
+        history.slice(0,10).forEach(item => {
+
+            const row =
+                document.createElement("div");
+
+            row.className =
+                "history-row";
+
+
+            const period =
+                item.issueNumber ??
+                item.period ??
+                "—";
+
+
+            const number =
+                item.number ??
+                item.result ??
+                "—";
+
+
+            row.innerHTML = `
+
+                <div class="history-period">
+                    ${period}
+                </div>
+
+                <div class="history-number">
+                    ${number}
+                </div>
+
+            `;
+
+
+            historyBox.appendChild(row);
+
+        });
+
+    }catch(error){
+
+        console.log(
+            "Dashboard sync error:",
+            error
+        );
+
+    }
+
+}
+
+
+syncDashboard();
+
+setInterval(
+    syncDashboard,
+    3000
+);
+
+</script>
+
+</body>
 </html>
