@@ -97,23 +97,32 @@
 
     <script>
         async function fetchLive() {
-            try {
-                const response = await fetch('/api/live-result');
-                const data = await response.json();
-                if (data.next_period) {
-                    document.getElementById('round').innerText = "ROUND ID: " + data.next_period;
-                    document.getElementById('result').innerText = data.size;
-                    
-                    const isBig = data.size === 'BIG';
-                    const resCircle = document.getElementById('result');
-                    resCircle.style.borderColor = isBig ? '#ff9f00' : '#00ff00';
-                    resCircle.style.boxShadow = isBig ? '0 0 20px #ff9f00' : '0 0 20px #00ff00';
-                    resCircle.style.color = isBig ? '#ff9f00' : '#00ff00';
-                }
-            } catch (e) { document.getElementById('result').innerText = "!!"; }
+    try {
+        // हम पूरा URL इस्तेमाल करेंगे ताकि कोई भ्रम न रहे
+        const response = await fetch(window.location.origin + '/api/live-result');
+        const data = await response.json();
+        
+        if (data.next_period) {
+            // ID अपडेट करें
+            document.getElementById('round').innerText = "ID: ********" + String(data.next_period).slice(-5);
+            // प्रेडिक्शन अपडेट करें
+            document.getElementById('result').innerText = data.size;
+            
+            // डिजाइन अपडेट (BIG के लिए नारंगी, SMALL के लिए हरा)
+            const isBig = data.size === 'BIG';
+            const resCircle = document.getElementById('result');
+            resCircle.style.borderColor = isBig ? '#ff9f00' : '#00ff00';
+            resCircle.style.boxShadow = isBig ? '0 0 20px #ff9f00' : '0 0 20px #00ff00';
+            resCircle.style.color = isBig ? '#ff9f00' : '#00ff00';
         }
-        setInterval(fetchLive, 3000);
-        fetchLive();
+    } catch (e) {
+        // अगर एरर आए तो कंसोल में देखें
+        console.log("Fetch Error: ", e);
+    }
+}
+// हर 2.5 सेकंड में डेटा अपडेट करें
+setInterval(fetchLive, 2500);
+fetchLive();
     </script>
 </body>
 </html>
