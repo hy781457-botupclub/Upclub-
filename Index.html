@@ -1,21 +1,367 @@
-<script>
-    async function updateLive() {
-        try {
-            const res = await fetch("/api/live-hack");
-            const data = await res.json();
-            if (data.ok) {
-                // Update Period and Timer
-                document.getElementById("timer").textContent = `00:${data.timer < 10 ? '0'+data.timer : data.timer}`;
-                document.getElementById("nextIssue").textContent = data.period;
-                
-                // Hamesha live result dikhaye
-                document.getElementById("bigNumberDisplay").textContent = data.hack.num;
-                document.getElementById("nextDetails").textContent = `<latex>{data.hack.size} | </latex>{data.hack.color}`;
-                
-                let color = data.hack.color === "GREEN" ? "#35e98b" : "#ff4050";
-                document.getElementById("bigNumberDisplay").style.color = color;
-            }
-        } catch (e) { console.log("Live Sync Error"); }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+
+<title>LIVE RESULT - White Label Dashboard</title>
+
+<style>
+:root{
+    --gold:#ffbf00;
+    --gold2:#ffd75a;
+    --bg:#050a14;
+    --card:#0d1526;
+    --muted:#8794b0;
+    --green:#35e98b;
+    --red:#ff4050;
+    --violet:#b34dff;
+}
+
+*{
+    box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent;
+}
+
+body{
+    margin:0;
+    min-height:100vh;
+    background:
+        radial-gradient(circle at top,#18243d 0%,#050a14 45%);
+    color:#fff;
+    font-family:Arial,sans-serif;
+}
+
+.header{
+    text-align:center;
+    padding:20px 15px;
+    border-bottom:1px solid rgba(255,191,0,.45);
+    background:rgba(13,21,38,.95);
+    box-shadow:0 3px 20px rgba(255,191,0,.08);
+}
+
+.header h1{
+    margin:0;
+    font-size:25px;
+    font-weight:900;
+    letter-spacing:2px;
+}
+
+.header span{
+    color:var(--gold);
+}
+
+.container{
+    width:100%;
+    max-width:480px;
+    margin:auto;
+    padding:20px 16px 30px;
+}
+
+.card{
+    background:rgba(13,21,38,.9);
+    border:1px solid rgba(255,191,0,.25);
+    border-radius:18px;
+    padding:18px;
+    margin-bottom:16px;
+    box-shadow:0 8px 25px rgba(0,0,0,.25);
+}
+
+.label{
+    font-size:11px;
+    color:var(--muted);
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+}
+
+.period{
+    margin-top:8px;
+    font-size:20px;
+    font-weight:800;
+    color:var(--gold);
+    word-break:break-all;
+}
+
+.timer-card{
+    text-align:center;
+    padding:22px;
+}
+
+#timer{
+    margin:5px 0;
+    font-size:42px;
+    font-weight:900;
+    color:var(--gold);
+}
+
+.result-card{
+    text-align:center;
+    border:2px solid rgba(255,191,0,.55);
+    background:linear-gradient(
+        145deg,
+        rgba(255,191,0,.08),
+        rgba(13,21,38,.96)
+    );
+}
+
+.result-title{
+    color:var(--gold);
+    font-size:12px;
+    font-weight:bold;
+    letter-spacing:2px;
+}
+
+#result{
+    font-size:105px;
+    line-height:1;
+    margin:15px 0 8px;
+    font-weight:900;
+    color:var(--gold);
+}
+
+#details{
+    font-size:18px;
+    font-weight:bold;
+    letter-spacing:2px;
+    color:var(--muted);
+}
+
+.next-box{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+}
+
+.next-period{
+    text-align:right;
+    color:var(--gold);
+    font-weight:bold;
+    word-break:break-all;
+}
+
+.status{
+    text-align:center;
+    color:var(--green);
+    font-size:11px;
+    letter-spacing:1px;
+    margin:18px 0;
+}
+
+.history-title{
+    color:var(--gold);
+    font-size:14px;
+    font-weight:bold;
+    letter-spacing:1px;
+    margin-bottom:12px;
+}
+
+.history-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 5px;
+    border-bottom:1px solid rgba(255,255,255,.07);
+}
+
+.history-item:last-child{
+    border-bottom:0;
+}
+
+.history-period{
+    color:#c7cfdf;
+    font-size:12px;
+}
+
+.history-result{
+    font-size:20px;
+    font-weight:900;
+    color:var(--gold);
+}
+
+.empty{
+    text-align:center;
+    padding:18px 5px;
+    color:var(--muted);
+    font-size:13px;
+}
+
+@media(max-width:360px){
+    #result{
+        font-size:85px;
     }
-    setInterval(updateLive, 1000);
+
+    .header h1{
+        font-size:21px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>LIVE <span>RESULT</span></h1>
+    <div class="label" style="margin-top:6px;">
+        White Label Dashboard
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- CURRENT PERIOD -->
+    <div class="card">
+        <div class="label">Current Period</div>
+        <div id="period" class="period">—</div>
+    </div>
+
+    <!-- TIMER -->
+    <div class="card timer-card">
+        <div class="label">NEXT RESULT IN</div>
+        <div id="timer">—</div>
+    </div>
+
+    <!-- CURRENT RESULT -->
+    <div class="card result-card">
+        <div class="result-title">CURRENT RESULT</div>
+
+        <div id="result">—</div>
+
+        <div id="details">—</div>
+    </div>
+
+    <!-- NEXT PERIOD -->
+    <div class="card next-box">
+        <div>
+            <div class="label">Next Period</div>
+        </div>
+
+        <div id="nextPeriod" class="next-period">—</div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="status">
+        ● LIVE API CONNECTED
+    </div>
+
+    <!-- HISTORY -->
+    <div class="card">
+        <div class="history-title">RESULT HISTORY</div>
+
+        <div id="history">
+            <div class="empty">Loading history...</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+async function updateDashboard(){
+
+    try{
+
+        /*
+         * Yahan apna existing endpoint rakho.
+         * Source/API logic ko is UI mein change nahi kiya gaya hai.
+         */
+        const response = await fetch("/api/data");
+
+        const data = await response.json();
+
+        if(!data.ok) return;
+
+        // Current Period
+        document.getElementById("period").textContent =
+            data.period ?? "—";
+
+        // Timer — backend/source se jo value aaye wahi show hogi
+        document.getElementById("timer").textContent =
+            data.timer !== undefined ? data.timer : "—";
+
+        // Result
+        const result =
+            data.result ??
+            data.number ??
+            "—";
+
+        document.getElementById("result").textContent = result;
+
+        // Size + Color
+        const size =
+            data.size ??
+            data.result_size ??
+            "";
+
+        const color =
+            data.color ??
+            data.result_color ??
+            "";
+
+        document.getElementById("details").textContent =
+            [size,color].filter(Boolean).join(" | ") || "—";
+
+        // Next Period
+        document.getElementById("nextPeriod").textContent =
+            data.next ??
+            data.nextPeriod ??
+            "—";
+
+        // History
+        const historyBox =
+            document.getElementById("history");
+
+        const history =
+            Array.isArray(data.history)
+                ? data.history
+                : [];
+
+        if(history.length === 0){
+
+            historyBox.innerHTML =
+                '<div class="empty">No history available</div>';
+
+            return;
+        }
+
+        historyBox.innerHTML = history
+            .slice(0,10)
+            .map(item => {
+
+                const p =
+                    item.issueNumber ??
+                    item.period ??
+                    "—";
+
+                const n =
+                    item.number ??
+                    item.result ??
+                    "—";
+
+                return `
+                    <div class="history-item">
+                        <div class="history-period">${p}</div>
+                        <div class="history-result">${n}</div>
+                    </div>
+                `;
+
+            })
+            .join("");
+
+    }catch(error){
+
+        console.log("Dashboard Sync Error:",error);
+
+    }
+}
+
+/*
+ * Sirf backend/source ko read karta hai.
+ * Koi local 60-second timer ya fake period generate nahi karta.
+ */
+setInterval(updateDashboard,1000);
+
+updateDashboard();
 </script>
+
+</body>
+</html>
