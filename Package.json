@@ -1,11 +1,16 @@
 {
-  "name": "bdg-wss-hack",
+  "name": "wingo-live-sync",
   "version": "1.0.0",
-  "scripts": { "start": "node server.js" },
+  "description": "Live WinGo Sync Server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
     "express": "^4.18.2",
-    "ws": "^8.14.2",
-    "cors": "^2.8.5",
-    "axios": "^1.6.2"
+    "axios": "^1.4.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   }
 }
