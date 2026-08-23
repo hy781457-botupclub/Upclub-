@@ -31,38 +31,19 @@
     </div>
 
     <script>
-        // WebSocket (WSS) Logic
-        const socket = new WebSocket('wss://api.ar-lottery01.com/websocket');
-
-        socket.onopen = () => {
-            console.log("Mother API Connected via WSS");
-            socket.send(JSON.stringify({ "type": "subscribe", "game": "wingo1m" }));
-            document.getElementById('round').innerText = "WSS CONNECTED";
-        };
-
-        socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.number !== undefined) {
-                updateUI(data.issueNumber, data.number);
+    async function fetchFromMyServer() {
+        try {
+            // अब हम किसी प्रॉक्सी का नहीं, सीधे अपने रेंडर लिंक का उपयोग करेंगे
+            const response = await fetch('/api/live-result');
+            const data = await response.json();
+            if (data.next_period) {
+                document.getElementById('round').innerText = "ROUND ID: " + data.next_period;
+                document.getElementById('result').innerText = data.size;
+                document.getElementById('result').style.color = data.size === 'BIG' ? 'gold' : '#00ff00';
             }
-        };
-
-        // UI Update Function
-        function updateUI(issue, num) {
-            document.getElementById('round').innerText = "ROUND ID: " + (parseInt(issue) + 1);
-            const prediction = num >= 5 ? "SMALL" : "BIG";
-            const resCircle = document.getElementById('result');
-            resCircle.innerText = prediction;
-            
-            const isBig = prediction === 'BIG';
-            resCircle.style.borderColor = isBig ? '#ff9f00' : '#00ff00';
-            resCircle.style.color = isBig ? '#ff9f00' : '#00ff00';
-            resCircle.style.boxShadow = isBig ? '0 0 20px #ff9f00' : '0 0 20px #00ff00';
-        }
-
-        // Error Handling
-        socket.onerror = (error) => { console.log("WSS Error: ", error); };
-        socket.onclose = () => { console.log("WSS Closed. Reconnecting..."); };
+        } catch (e) { document.getElementById('round').innerText = "SYNCING..."; }
+    }
+    setInterval(fetchFromMyServer, 3000);
     </script>
 </body>
 </html>
