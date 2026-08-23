@@ -1,57 +1,48 @@
 const express = require('express');
 const axios = require('axios');
-const cors = require('cors');
 const path = require('path');
+const cors = require('cors');
 const app = express();
 
-app.use(cors({ origin: '*' }));
-app.use(express.json());
-app.use(express.static(__dirname));
+app.use(cors());
+app.use(express.static(path.join(__dirname)));
 
 const PORT = process.env.PORT || 10000;
-const BDG_API = "https://api.bdg88zf.com/GetWinTheLotteryResult";
+const API_URL = "https://draw.ar-lottery01.com/WinGo/WinGo_1M.json";
 
-// सुरक्षित डेटा फेचिंग फंक्शन
-async function fetchBDGData() {
+app.get('/api/wingo', async (req, res) => {
     try {
-        const response = await axios.post(BDG_API, { type: 1 }, {
+        // IP Security Headers: API को भ्रमित करने के लिए [cite chunk_id=c11_chemistry_ch62_p12_para2 source="📘 NCERT Chemistry Part-I - S.., Pg:12" source_short="📘"]
+        const response = await axios.get(`<latex>{API_URL}?ts=</latex>{Date.now()}`, {
             headers: {
-                'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; SM-G960F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Mobile Safari/537.36',
-                'Referer': 'https://bdg88zf.com/',
-                'Origin': 'https://bdg88zf.com'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json',
+                'Referer': 'https://ar-lottery01.com/',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             timeout: 5000
         });
-        return response.data.data || null;
-    } catch (e) {
-        return null;
-    }
-}
 
-// मास्टर डेटा रूट (HTML और Script दोनों के लिए)
-app.all(['/api/data', '/GetWinTheLotteryResult', '/GetLotteryCategoryList'], async (req, res) => {
-    const data = await fetchBDGData();
-    
-    if (data) {
-        const num = data.number;
+        const data = response.data?.data || {};
+        const current = data.current || {};
+        const history = data.list || [];
+
+        // पक्का रिजल्ट मैपिंग
+        const period = current.issueNumber || (history[0] ? history[0].issueNumber : "-");
+        const number = current.number || (history[0] ? history[0].number : "-");
+        const nextPeriod = period !== "-" ? (BigInt(period) + 1n).toString() : "-";
+
         res.json({
             ok: true,
-            success: true,
-            timer: 60 - new Date().getSeconds(),
-            period: data.issueNumber,
-            hack: {
-                num: num,
-                size: parseInt(num) >= 5 ? "BIG" : "SMALL",
-                color: (num == 0 || num == 5) ? "VIOLET" : (num % 2 === 0 ? "RED" : "GREEN")
-            },
-            data: [{ categoryName: "WinGo", issueNumber: data.issueNumber, number: num }]
+            period: period,
+            result: number,
+            next: nextPeriod,
+            history: history.slice(0, 10)
         });
-    } else {
-        res.json({ ok: false, message: "Proxy Syncing..." });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: "Syncing..." });
     }
 });
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-
-app.listen(PORT, () => console.
+app.listen(PORT, () => console.log(`Secure Server Live on ${PORT}`));
