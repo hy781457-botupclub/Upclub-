@@ -1,7 +1,6 @@
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
-const axios = require("axios");
 
 const app = express();
 
@@ -11,98 +10,131 @@ app.use(express.static(__dirname));
 
 const PORT = process.env.PORT || 10000;
 
-const TEST_API =
-    "https://jsonplaceholder.typicode.com/posts";
 
-
-// ================================
-// HEALTH CHECK
-// ================================
+// =====================================
+// HEALTH
+// =====================================
 
 app.get("/health", (req, res) => {
+
     res.json({
         ok: true,
         server: "live",
         time: new Date().toISOString()
     });
+
 });
 
 
-// ================================
-// TEST DATA API
-// ================================
+// =====================================
+// DASHBOARD DATA
+// =====================================
 
 app.get("/api/data", async (req, res) => {
 
     try {
 
-        const response = await axios.get(TEST_API);
+        /*
+         * SOURCE DATA PLACEHOLDER
+         *
+         * Yahan tumhara existing source-response
+         * provide hona chahiye.
+         */
 
-        const posts = Array.isArray(response.data)
-            ? response.data.slice(0, 10)
-            : [];
+        const SOURCE_DATA = null;
 
-        const latest = posts[0] || {};
+        const list =
+            SOURCE_DATA?.data?.list || [];
+
+        const latest =
+            list[0] || {};
+
+        const sourceData = {
+
+            period:
+                latest.issueNumber ?? null,
+
+            history:
+                list.slice(0,10)
+
+        };
+
 
         res.json({
+
             ok: true,
 
             period:
-                latest.id
-                    ? String(latest.id)
-                    : "—",
+                sourceData.period ?? "—",
 
-            result:
-                latest.userId !== undefined
-                    ? String(latest.userId)
-                    : "—",
+            // Result intentionally hidden
+            result: null,
 
+            // Source mein available hone par fill hoga
             timer: null,
 
-            next:
-                latest.id
-                    ? String(Number(latest.id) + 1)
-                    : "—",
+            next: null,
 
-            history: posts.map(item => ({
-                issueNumber: String(item.id),
-                number: String(item.userId),
-                title: item.title
-            }))
+            history:
+                sourceData.history
+
         });
 
-    } catch (error) {
+    } catch(error) {
 
         console.error(
-            "Test API error:",
+            "Data error:",
             error.message
         );
 
         res.status(500).json({
+
             ok: false,
-            error: "Unable to load test data"
+
+            error: "Unable to load data",
+
+            period: "—",
+
+            result: null,
+
+            timer: null,
+
+            next: null,
+
+            history: []
+
         });
+
     }
+
 });
 
 
-// ================================
+// =====================================
 // DASHBOARD
-// ================================
+// =====================================
 
 app.get("/", (req, res) => {
+
     res.sendFile(
         path.join(__dirname, "index.html")
     );
+
 });
 
 
-// ================================
-// START SERVER
-// ================================
+// =====================================
+// START
+// =====================================
 
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(
-        `Server running on port ${PORT}`
-    );
-});
+app.listen(
+    PORT,
+    "0.0.0.0",
+    () => {
+
+        console.log(
+            `Server running on port ${PORT}`
+        );
+
+    }
+);
