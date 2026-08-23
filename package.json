@@ -1,7 +1,7 @@
 {
-  "name": "upclub-bdg-hack",
+  "name": "wingo-white-label-sync",
   "version": "1.0.0",
-  "description": "BDG Win Secure Proxy Engine",
+  "description": "Direct Mother API Synchronization Panel",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -9,7 +9,8 @@
   "dependencies": {
     "express": "^4.18.2",
     "axios": "^1.6.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "path": "^0.12.7"
   },
   "engines": {
     "node": ">=14.0.0"
