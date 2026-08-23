@@ -1,39 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP HACK DOMAIN</title>
-    <style>
-        body { background: #000; color: #0f0; font-family: monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .terminal { width: 90%; max-width: 400px; border: 2px solid #0f0; padding: 20px; text-align: center; border-radius: 10px; box-shadow: 0 0 20px #0f0; }
-        .res { font-size: 70px; font-weight: bold; margin: 20px 0; text-shadow: 0 0 15px gold; color: gold; }
-        .info { font-size: 14px; margin: 5px 0; }
-    </style>
-</head>
-<body>
-    <div class="terminal">
-        <div style="border-bottom: 1px solid #0f0; padding-bottom: 10px; margin-bottom: 15px;">SYSTEM STATUS: ACTIVE</div>
-        <div class="info">PERIOD: <span id="period">SYNCING...</span></div>
-        <div class="res" id="result">--</div>
-        <div class="info">ACCURACY: <span style="color:cyan">98.8%</span></div>
-        <div class="info" style="font-size: 10px; color: #444; margin-top: 15px;">CONNECTED TO LIVE JSON SERVER</div>
-    </div>
-
-    <script>
-        async function fetchLive() {
-            try {
-                const response = await fetch('/api/live-result');
-                const data = await response.json();
-                if (data.next_period) {
-                    document.getElementById('period').innerText = data.next_period;
-                    document.getElementById('result').innerText = data.size;
-                    document.getElementById('result').style.color = data.size === 'BIG' ? 'gold' : '#4dff4d';
-                }
-            } catch (e) { document.getElementById('result').innerText = "ERROR"; }
+async function fetchLive() {
+    try {
+        // सीधे आपके Render API से डेटा मांगना
+        const response = await fetch('/api/live-result');
+        const data = await response.json();
+        
+        // चेक करें कि डेटा में पीरियड और प्रेडिक्शन (Size) है या नहीं
+        if (data.next_period && data.size) {
+            // 1. पीरियड नंबर अपडेट करें
+            document.getElementById('round').innerText = "ID: " + data.next_period;
+            
+            // 2. रिजल्ट (BIG/SMALL) अपडेट करें
+            const resCircle = document.getElementById('result');
+            resCircle.innerText = data.size;
+            
+            // 3. रंग बदलें (BIG के लिए नारंगी, SMALL के लिए हरा)
+            if (data.size === 'BIG') {
+                resCircle.style.borderColor = '#ff9f00';
+                resCircle.style.boxShadow = '0 0 20px #ff9f00';
+                resCircle.style.color = '#ff9f00';
+            } else {
+                resCircle.style.borderColor = '#00ff00';
+                resCircle.style.boxShadow = '0 0 20px #00ff00';
+                resCircle.style.color = '#00ff00';
+            }
         }
-        setInterval(fetchLive, 2500);
-        fetchLive();
-    </script>
-</body>
-</html>
+    } catch (e) {
+        console.log("Syncing Error:", e);
+        document.getElementById('round').innerText = "ID: RECONNECTING...";
+    }
+}
+
+// हर 2 सेकंड में डेटा रिफ्रेश करें
+setInterval(fetchLive, 2000);
+fetchLive();
