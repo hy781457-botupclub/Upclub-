@@ -1,14 +1,15 @@
 {
-  "name": "wingo-live-sync",
+  "name": "harendra-vip-navigator",
   "version": "1.0.0",
-  "description": "Live WinGo Sync Server",
+  "description": "Live WinGo Sync for VIP Navigator",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "axios": "^1.4.0"
+    "axios": "^1.4.0",
+    "cors": "^2.8.5"
   },
   "engines": {
     "node": ">=14.0.0"
