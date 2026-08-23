@@ -3,13 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-
-<title>Live Dashboard</title>
+<title>Live Period Dashboard</title>
 
 <style>
-*{
-    box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
     margin:0;
@@ -30,7 +27,6 @@ body{
     color:#6d5300;
     font-size:24px;
     font-weight:900;
-    letter-spacing:1px;
 }
 
 .header p{
@@ -70,12 +66,10 @@ body{
     word-break:break-all;
 }
 
-/* Result removed */
-
 .timer{
     text-align:center;
-    margin-top:20px;
-    padding:20px 0;
+    margin-top:22px;
+    padding:18px 0;
 }
 
 .timer-value{
@@ -137,15 +131,10 @@ body{
 }
 
 .history-number{
-    width:38px;
-    height:38px;
+    width:10px;
+    height:10px;
     border-radius:50%;
     background:#efd879;
-    color:#624900;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:bold;
 }
 
 .empty{
@@ -168,36 +157,17 @@ body{
 
 <section class="card">
 
-    <div class="label">
-        Current Period
-    </div>
-
-    <div id="period" class="period">
-        —
-    </div>
+    <div class="label">Current Period</div>
+    <div id="period" class="period">—</div>
 
     <div class="timer">
-
-        <div class="label">
-            NEXT RESULT IN
-        </div>
-
-        <div id="timer" class="timer-value">
-            —
-        </div>
-
+        <div class="label">NEXT RESULT IN</div>
+        <div id="timer" class="timer-value">—</div>
     </div>
 
     <div class="next">
-
-        <span>
-            Next Period
-        </span>
-
-        <strong id="nextPeriod">
-            —
-        </strong>
-
+        <span>Next Period</span>
+        <strong id="nextPeriod">—</strong>
     </div>
 
     <div class="status">
@@ -207,74 +177,48 @@ body{
 
 </section>
 
-
 <section class="card">
 
-    <div
-        class="label"
-        style="margin-bottom:10px;"
-    >
+    <div class="label" style="margin-bottom:10px">
         Result History
     </div>
 
     <div id="history">
-        <div class="empty">
-            Loading history...
-        </div>
+        <div class="empty">Loading history...</div>
     </div>
 
 </section>
 
 </main>
 
-
 <script>
-
 async function syncDashboard(){
 
     try{
 
-        const response =
-            await fetch("/api/data");
+        const response = await fetch("/api/data");
 
-        if(!response.ok){
+        if(!response.ok)
             throw new Error("API error");
-        }
 
-        const data =
-            await response.json();
+        const data = await response.json();
 
-        if(!data.ok){
+        if(!data.ok)
             return;
-        }
-
 
         document.getElementById("period").textContent =
             data.period ?? "—";
 
-
         document.getElementById("nextPeriod").textContent =
-            data.next ?? data.nextPeriod ?? "—";
+            data.next ?? "—";
 
-
-        if(
-            data.timer !== undefined &&
+        document.getElementById("timer").textContent =
             data.timer !== null &&
-            data.timer !== ""
-        ){
+            data.timer !== undefined
+                ? String(data.timer).padStart(2,"0")
+                : "—";
 
-            document.getElementById("timer").textContent =
-                String(data.timer).padStart(2,"0");
-
-        }else{
-
-            document.getElementById("timer").textContent =
-                "—";
-
-        }
-
-
-        const historyBox =
+        const box =
             document.getElementById("history");
 
         const history =
@@ -282,76 +226,44 @@ async function syncDashboard(){
                 ? data.history
                 : [];
 
+        box.innerHTML = "";
 
-        historyBox.innerHTML = "";
+        if(!history.length){
 
-
-        if(history.length === 0){
-
-            historyBox.innerHTML =
+            box.innerHTML =
                 '<div class="empty">No history available</div>';
 
             return;
         }
-
 
         history.slice(0,10).forEach(item => {
 
             const row =
                 document.createElement("div");
 
-            row.className =
-                "history-row";
-
-
-            const period =
-                item.issueNumber ??
-                item.period ??
-                "—";
-
-
-            const number =
-                item.number ??
-                item.result ??
-                "—";
-
+            row.className = "history-row";
 
             row.innerHTML = `
-
                 <div class="history-period">
-                    ${period}
+                    ${item.issueNumber ?? "—"}
                 </div>
-
-                <div class="history-number">
-                    ${number}
-                </div>
-
+                <div class="history-number"></div>
             `;
 
-
-            historyBox.appendChild(row);
-
+            box.appendChild(row);
         });
 
     }catch(error){
 
         console.log(
             "Dashboard sync error:",
-            error
+            error.message
         );
-
     }
-
 }
 
-
 syncDashboard();
-
-setInterval(
-    syncDashboard,
-    3000
-);
-
+setInterval(syncDashboard,3000);
 </script>
 
 </body>
