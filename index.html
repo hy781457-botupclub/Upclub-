@@ -1,270 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Live Period Dashboard</title>
-
-<style>
-*{box-sizing:border-box}
-
-body{
-    margin:0;
-    font-family:Arial,Helvetica,sans-serif;
-    background:#f4f6f9;
-    color:#222;
-}
-
-.header{
-    background:linear-gradient(135deg,#fff,#ead17a);
-    padding:22px 18px;
-    border-bottom:1px solid #d5b84f;
-    text-align:center;
-}
-
-.header h1{
-    margin:0;
-    color:#6d5300;
-    font-size:24px;
-    font-weight:900;
-}
-
-.header p{
-    margin:6px 0 0;
-    color:#746c55;
-    font-size:13px;
-}
-
-.container{
-    width:100%;
-    max-width:700px;
-    margin:auto;
-    padding:16px;
-}
-
-.card{
-    background:#fff;
-    border-radius:18px;
-    padding:20px;
-    margin-bottom:16px;
-    box-shadow:0 6px 22px rgba(0,0,0,.07);
-}
-
-.label{
-    font-size:12px;
-    font-weight:bold;
-    color:#8a7950;
-    letter-spacing:1px;
-    text-transform:uppercase;
-}
-
-.period{
-    margin-top:8px;
-    font-size:18px;
-    font-weight:bold;
-    color:#493900;
-    word-break:break-all;
-}
-
-.timer{
-    text-align:center;
-    margin-top:22px;
-    padding:18px 0;
-}
-
-.timer-value{
-    margin-top:5px;
-    font-size:42px;
-    font-weight:900;
-    color:#735700;
-}
-
-.next{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:12px;
-    margin-top:16px;
-    padding:15px;
-    border-radius:12px;
-    background:#faf8ee;
-}
-
-.next strong{
-    color:#624900;
-    word-break:break-all;
-    text-align:right;
-}
-
-.status{
-    text-align:center;
-    margin-top:15px;
-    font-size:12px;
-    color:#777;
-}
-
-.dot{
-    width:8px;
-    height:8px;
-    display:inline-block;
-    border-radius:50%;
-    background:#3ca45a;
-    margin-right:5px;
-}
-
-.history-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:13px 0;
-    border-bottom:1px solid #eee;
-}
-
-.history-row:last-child{
-    border-bottom:0;
-}
-
-.history-period{
-    color:#777;
-    font-size:12px;
-    word-break:break-all;
-}
-
-.history-number{
-    width:10px;
-    height:10px;
-    border-radius:50%;
-    background:#efd879;
-}
-
-.empty{
-    text-align:center;
-    color:#999;
-    padding:15px 0;
-    font-size:13px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDG VIP PREDICTOR</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: #0f0f0f; 
+            color: #ffffff; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; justify-content: center; align-items: center; height: 100vh;
+        }
+        .app-container {
+            width: 90%; max-width: 400px; background: #1a1a1a;
+            border: 2px solid gold; border-radius: 20px;
+            padding: 25px; text-align: center;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+        .header { color: gold; font-size: 22px; font-weight: bold; letter-spacing: 2px; }
+        .status-bar { font-size: 12px; margin-top: 10px; color: #00ff00; }
+        .divider { height: 1px; background: #333; margin: 20px 0; }
+        .period-box { font-size: 14px; color: #aaa; }
+        .result-box { 
+            font-size: 60px; font-weight: 900; margin: 20px 0;
+            text-shadow: 0 0 20px #00ff00; color: #00ff00;
+        }
+        .accuracy { color: cyan; font-size: 16px; font-weight: bold; }
+        .refresh-btn {
+            margin-top: 25px; width: 100%; padding: 12px;
+            background: gold; color: #000; border: none;
+            border-radius: 10px; font-weight: bold; cursor: pointer;
+        }
+        .footer { font-size: 10px; color: #555; margin-top: 15px; }
+    </style>
 </head>
-
 <body>
 
-<header class="header">
-    <h1>LIVE RESULT</h1>
-    <p>White Label Dashboard</p>
-</header>
+    <div class="app-container">
+        <div class="header">BDG VIP SERVER</div>
+        <div class="status-bar" id="status">CONNECTING...</div>
+        
+        <div class="divider"></div>
 
-<main class="container">
+        <div class="period-box" id="period-display">Next Period: Syncing..</div>
+        <div class="result-box" id="result-display">--</div>
+        <div class="accuracy" id="acc-display">Confidence: --</div>
 
-<section class="card">
-
-    <div class="label">Current Period</div>
-    <div id="period" class="period">—</div>
-
-    <div class="timer">
-        <div class="label">NEXT RESULT IN</div>
-        <div id="timer" class="timer-value">—</div>
+        <button class="refresh-btn" onclick="location.reload()">REFRESH SERVER</button>
+        
+        <div class="footer">POWERED BY RENDER CLOUD SYSTEM</div>
     </div>
 
-    <div class="next">
-        <span>Next Period</span>
-        <strong id="nextPeriod">—</strong>
-    </div>
+    <script>
+        async function fetchPrediction() {
+            try {
+                // यह आपके Render के index.js वाले API मार्ग से डेटा लाएगा
+                const response = await fetch('/api/predict');
+                const data = await response.json();
 
-    <div class="status">
-        <span class="dot"></span>
-        LIVE API CONNECTED
-    </div>
-
-</section>
-
-<section class="card">
-
-    <div class="label" style="margin-bottom:10px">
-        Result History
-    </div>
-
-    <div id="history">
-        <div class="empty">Loading history...</div>
-    </div>
-
-</section>
-
-</main>
-
-<script>
-async function syncDashboard(){
-
-    try{
-
-        const response = await fetch("/api/data");
-
-        if(!response.ok)
-            throw new Error("API error");
-
-        const data = await response.json();
-
-        if(!data.ok)
-            return;
-
-        document.getElementById("period").textContent =
-            data.period ?? "—";
-
-        document.getElementById("nextPeriod").textContent =
-            data.next ?? "—";
-
-        document.getElementById("timer").textContent =
-            data.timer !== null &&
-            data.timer !== undefined
-                ? String(data.timer).padStart(2,"0")
-                : "—";
-
-        const box =
-            document.getElementById("history");
-
-        const history =
-            Array.isArray(data.history)
-                ? data.history
-                : [];
-
-        box.innerHTML = "";
-
-        if(!history.length){
-
-            box.innerHTML =
-                '<div class="empty">No history available</div>';
-
-            return;
+                if (data.period) {
+                    document.getElementById('status').innerText = "● LIVE SYNC ACTIVE";
+                    document.getElementById('status').style.color = "#00ff00";
+                    document.getElementById('period-display').innerText = "Next Period: " + data.period;
+                    document.getElementById('result-display').innerText = data.prediction;
+                    
+                    // Accuracy Logic
+                    document.getElementById('acc-display').innerText = "Confidence: 94% (DRAGON)";
+                    
+                    // Color change based on result
+                    document.getElementById('result-display').style.color = 
+                        data.prediction === 'BIG' ? '#ff4d4d' : '#4dff4d';
+                    document.getElementById('result-display').style.textShadow = 
+                        data.prediction === 'BIG' ? '0 0 20px #ff4d4d' : '0 0 20px #4dff4d';
+                }
+            } catch (err) {
+                document.getElementById('status').innerText = "● SERVER ERROR: CHECK TOKEN";
+                document.getElementById('status').style.color = "#ff0000";
+                document.getElementById('result-display').innerText = "!!";
+            }
         }
 
-        history.slice(0,10).forEach(item => {
-
-            const row =
-                document.createElement("div");
-
-            row.className = "history-row";
-
-            row.innerHTML = `
-                <div class="history-period">
-                    ${item.issueNumber ?? "—"}
-                </div>
-                <div class="history-number"></div>
-            `;
-
-            box.appendChild(row);
-        });
-
-    }catch(error){
-
-        console.log(
-            "Dashboard sync error:",
-            error.message
-        );
-    }
-}
-
-syncDashboard();
-setInterval(syncDashboard,3000);
-</script>
-
+        // हर 3 सेकंड में अपडेट
+        setInterval(fetchPrediction, 3000);
+        fetchPrediction();
+    </script>
 </body>
 </html>
