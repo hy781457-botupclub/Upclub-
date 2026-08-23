@@ -2,48 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VIP NAVIGATOR | HARENDRA YADAV</title>
     <style>
-        /* ... CSS वही है जो पहले था ... */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        .navigator-container { width: 100%; height: 100%; max-width: 400px; background: radial-gradient(circle, #1a1a2e 0%, #000 100%); padding: 20px; display: flex; flex-direction: column; align-items: center; border: 2px solid #00d2ff; box-shadow: 0 0 20px #00d2ff; position: relative; }
-        .name-marquee { width: 100%; background: rgba(0, 210, 255, 0.2); color: gold; font-weight: bold; padding: 8px 0; overflow: hidden; white-space: nowrap; border-bottom: 1px solid #00d2ff; position: absolute; top: 0; font-size: 14px; letter-spacing: 2px; }
-        .name-marquee span { display: inline-block; padding-left: 100%; animation: marquee 12s linear infinite; }
-        @keyframes marquee { 0% { transform: translate(0, 0); } 100% { transform: translate(-100%, 0); } }
-        .header-logo { font-size: 24px; font-weight: bold; color: #00d2ff; text-shadow: 0 0 10px #00d2ff; margin-top: 40px; margin-bottom: 20px; }
-        .timer-circle { width: 170px; height: 170px; border-radius: 50%; border: 6px solid #ff9f00; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 25px #ff9f00; margin-bottom: 20px; }
-        .round-box { width: 85%; background: rgba(0, 210, 255, 0.1); border: 1px solid #00d2ff; padding: 12px; border-radius: 10px; text-align: center; margin-bottom: 30px; }
-        .result-section { width: 90%; border: 2px solid #ff9f00; border-radius: 15px; padding: 20px; text-align: center; background: rgba(0,0,0,0.6); }
-        .res-circle { width: 110px; height: 110px; border-radius: 50%; border: 5px solid #00ff00; margin: 0 auto; display: flex; justify-content: center; align-items: center; font-size: 55px; font-weight: 900; color: #fff; box-shadow: 0 0 20px #00ff00; }
-        .start-btn { margin-top: 25px; width: 85%; padding: 15px; background: linear-gradient(to right, #ff9f00, #d45d00); border: none; border-radius: 10px; color: #fff; font-weight: bold; font-size: 18px; cursor: pointer; }
+        body { background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; overflow: hidden; }
+        .container { width: 90%; max-width: 400px; background: radial-gradient(circle, #1a1a2e 0%, #000 100%); padding: 30px; border-radius: 20px; border: 2px solid #00d2ff; text-align: center; box-shadow: 0 0 20px #00d2ff; }
+        .marquee { width: 100%; position: absolute; top: 0; left: 0; background: rgba(0,210,255,0.2); color: gold; padding: 10px; overflow: hidden; white-space: nowrap; border-bottom: 1px solid #00d2ff; }
+        .marquee span { display: inline-block; padding-left: 100%; animation: scroll 15s linear infinite; font-weight: bold; }
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .circle { width: 120px; height: 120px; border-radius: 50%; border: 5px solid #ff9f00; margin: 20px auto; display: flex; justify-content: center; align-items: center; font-size: 40px; font-weight: bold; transition: 0.5s; }
+        .round-id { background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; margin-bottom: 20px; color: cyan; font-family: monospace; }
+        .btn { width: 100%; padding: 15px; background: linear-gradient(to right, #ff9f00, #d45d00); border: none; border-radius: 10px; color: #fff; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="navigator-container">
-        <div class="name-marquee"><span>OWNER: HARENDRA YADAV ★ HARENDRA YADAV ★ HARENDRA YADAV ★</span></div>
-        <div class="header-logo">VIP NAVIGATOR PRO</div>
-        <div class="timer-circle"><div class="time-left" id="timer">00:--</div><div class="time-label">Time Left</div></div>
-        <div class="round-box"><div class="round-id" id="round">ID: SYNCING...</div></div>
-        <div class="result-section"><div class="res-circle" id="result">--</div></div>
-        <button class="start-btn" onclick="location.reload()">REFRESH SERVER</button>
-    </div>
-
-    <script>
-    async function fetchFromMyServer() {
-        try {
-            // अब हम किसी प्रॉक्सी का नहीं, सीधे अपने रेंडर लिंक का उपयोग करेंगे
-            const response = await fetch('/api/live-result');
-            const data = await response.json();
-            if (data.next_period) {
-                document.getElementById('round').innerText = "ROUND ID: " + data.next_period;
-                document.getElementById('result').innerText = data.size;
-                document.getElementById('result').style.color = data.size === 'BIG' ? 'gold' : '#00ff00';
-            }
-        } catch (e) { document.getElementById('round').innerText = "SYNCING..."; }
-    }
-    setInterval(fetchFromMyServer, 3000);
-    </script>
-</body>
-</html>
+    <div class="marquee"><span>OWNER: HARENDRA YADAV ★ HARENDRA YADAV ★ HARENDRA YADAV ★</span></div>
+    <div class="container">
+        <h2 style="color:#00d2ff; margin-bottom:20px;">VIP NAVIGATOR PRO</h2>
+        <div class="round-id" id="round">ROUND: SYNCING...</div>
+        <div class="circle" id="result">--</div>
+        <div id
