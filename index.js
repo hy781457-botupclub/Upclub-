@@ -34,7 +34,7 @@ app.get('/api/live', async (req, res) => {
 
 // मुख्य पेज पर एक छोटा सा मैसेज
 app.get('/', (req, res) => {
-    res.send("<h1>VIP SERVER ACTIVE: USE /api/live TO GET DATA</h1>");
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
