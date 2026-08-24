@@ -1,43 +1,41 @@
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-const path = require('path');
 const app = express();
 
+// CORS को ऑन करना बहुत ज़रूरी है ताकि Acode या ब्राउज़र ब्लॉक न करे
 app.use(cors());
-app.use(express.static(path.join(__dirname, '/')));
 
-// यहाँ से बदलाव शुरू है
-app.get('/api/live-result', async (req, res) => {
+app.get('/api/live', async (req, res) => {
     try {
         const ts = Date.now();
         const url = `https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?ts=${ts}`;
         
         const response = await axios.get(url, {
-            headers: {
-                'Accept': 'application/json, text/plain, */*',
-                'Sec-Ch-Ua': '"Not=A?Brand";v="99", "Android WebView";v="151", "Chromium";v="151"',
-                'Sec-Ch-Ua-Mobile': '?1',
-                'Sec-Ch-Ua-Platform': '"Android"',
-                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+            headers: { 'User-Agent': 'Mozilla/5.0' },
             timeout: 10000
         });
 
         if (response.data && response.data.list) {
             const last = response.data.list[0];
+            // सीधे सटीक डेटा भेजना
             res.json({
                 next_period: (BigInt(last.issueNumber) + 1n).toString(),
-                size: last.number >= 5 ? 'BIG' : 'SMALL'
+                size: last.number >= 5 ? 'BIG' : 'SMALL',
+                number: last.number
             });
         } else {
-            res.status(404).json({ error: "No Data" });
+            res.status(404).json({ error: "No Data Found" });
         }
     } catch (error) {
-        res.status(500).json({ error: "Connection Failed" });
+        res.status(500).json({ error: "Mother API Offline" });
     }
 });
 
+// मुख्य पेज पर एक छोटा सा मैसेज
+app.get('/', (req, res) => {
+    res.send("<h1>VIP SERVER ACTIVE: USE /api/live TO GET DATA</h1>");
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Engine Active"));
+app.listen(PORT, () => console.log("Predictor Engine Live"));
