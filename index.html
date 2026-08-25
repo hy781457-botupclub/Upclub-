@@ -22,21 +22,29 @@
         <div class="circle" id="result">--</div>
         <button class="btn" onclick="location.reload()">REFRESH SERVER</button>
     </div>
-
-    <script>
+       <script>
         async function startSync() {
             try {
-                // सीधे मदर JSON से डेटा उठाना (बिना index.js के झंझट के)
+                // ताज़ा डेटा के लिए टाइमस्टैम्प के साथ URL
                 const target = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?ts=" + Date.now();
                 const response = await fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent(target));
-                const data = await response.json();
+                const json = await response.json();
 
-                if (data && data.list) {
-                    const last = data.list[0];
+                // डेटा का सही रास्ता: json.data.list
+                const list = json.data?.list || [];
+
+                if (list && list.length > 0) {
+                    const last = list[0]; // सबसे ताज़ा (Latest) परिणाम
+                    
+                    // राउंड नंबर को अपडेट करना
                     document.getElementById('round').innerText = "ROUND: " + (parseInt(last.issueNumber) + 1);
+                    
+                    // सांख्यिकीय अनुमान (Statistical Prediction)
+                    // यदि पिछला नंबर 5-9 (Big) है, तो अगला Small होने की संभावना (या इसका उल्टा)
                     const pred = last.number >= 5 ? "SMALL" : "BIG";
+                    
                     const resBox = document.getElementById('result');
-                    resBox.innerText = pred;
+                    resBox.innerText = pred; // अनुमानित परिणाम दिखाना
                     resBox.style.color = pred === 'BIG' ? 'gold' : '#0f0';
                     resBox.style.borderColor = pred === 'BIG' ? 'gold' : '#0f0';
                 }
@@ -44,8 +52,10 @@
                 document.getElementById('round').innerText = "RECONNECTING...";
             }
         }
+
+        // हर 3 सेकंड में डेटा अपडेट करें
         setInterval(startSync, 3000);
-        startSync();
-    </script>
+        startSync(); // पहली बार तुरंत लोड करने के लिए
+       </script>
 </body>
 </html>
