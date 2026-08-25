@@ -3,73 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UPCLUB LIVE ADMIN - MOTHER SYNC</title>
+    <title>VIP NAVIGATOR | HARENDRA</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0b0e11; color: white; text-align: center; padding: 20px; }
-        .dashboard { max-width: 500px; margin: auto; background: #151921; padding: 25px; border-radius: 15px; border: 1px solid #2b2f3a; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .card { background: #1e232d; padding: 15px; border-radius: 10px; margin: 15px 0; border-left: 5px solid #4ecca3; }
-        .label { font-size: 14px; color: #9aa4bf; text-transform: uppercase; letter-spacing: 1px; }
-        .value { font-size: 28px; font-weight: bold; color: #4ecca3; margin-top: 5px; }
-        .prediction { color: #f0b90b; border-left-color: #f0b90b; }
-        .status { font-size: 12px; color: #00ff00; margin-bottom: 20px; }
+        body { background: #000; color: #fff; font-family: sans-serif; height: 100vh; display: flex; justify-content: center; align-items: center; margin: 0; overflow: hidden; }
+        .container { width: 90%; max-width: 400px; background: radial-gradient(circle, #1a1a2e 0%, #000 100%); padding: 30px; border-radius: 20px; border: 2px solid #00d2ff; text-align: center; }
+        .marquee { width: 100%; position: absolute; top: 0; left: 0; background: rgba(0,210,255,0.2); color: gold; padding: 10px; overflow: hidden; white-space: nowrap; }
+        .marquee span { display: inline-block; padding-left: 100%; animation: scroll 15s linear infinite; font-weight: bold; }
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .circle { width: 120px; height: 120px; border-radius: 50%; border: 5px solid #ff9f00; margin: 20px auto; display: flex; justify-content: center; align-items: center; font-size: 40px; font-weight: bold; transition: 0.5s; }
+        .btn { width: 100%; padding: 15px; background: gold; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-    <div class="dashboard">
-        <h2>UPCLUB LIVE ADMIN</h2>
-        <div id="statusText" class="status">● Mother API Connected (NowNodes)</div>
-        
-        <div class="card">
-            <div class="label">Current Period</div>
-            <div id="period" class="value">-</div>
-        </div>
-
-        <div class="card">
-            <div class="label">Winning Number</div>
-            <div id="result" class="value">-</div>
-        </div>
-
-        <div class="card">
-            <div class="label">Next Period</div>
-            <div id="nextPeriod" class="value">-</div>
-        </div>
-
-        <div class="card prediction">
-            <div class="label">Live Prediction</div>
-            <div id="prediction" class="value">Wait...</div>
-        </div>
+    <div class="marquee"><span>OWNER: HARENDRA YADAV ★ HARENDRA YADAV ★ HARENDRA YADAV</span></div>
+    <div class="container">
+        <h2 style="color:#00d2ff;">VIP NAVIGATOR PRO</h2>
+        <div id="round" style="margin:20px 0; color:cyan;">ROUND: SYNCING...</div>
+        <div class="circle" id="result">--</div>
+        <button class="btn" onclick="location.reload()">REFRESH SERVER</button>
     </div>
 
     <script>
-        async function updateDashboard() {
+        async function startSync() {
             try {
-                const res = await fetch('/api/wingo');
-                const data = await res.json();
-                
-                if (data.ok) {
-                    document.getElementById('period').innerText = data.period;
-                    document.getElementById('result').innerText = data.result;
-                    document.getElementById('nextPeriod').innerText = data.next;
-                    
-                    // प्रेडिक्शन दिखाना (NowNodes Logic)
-                    if (data.predicted) {
-                        document.getElementById('prediction').innerText = 
-                            data.predicted.size + " (" + data.predicted.color + ")";
-                    }
-                    document.getElementById('statusText').style.color = "#00ff00";
-                    document.getElementById('statusText').innerText = "● Mother API Live";
-                } else {
-                    document.getElementById('statusText').innerText = "○ Syncing Data...";
-                    document.getElementById('statusText').style.color = "orange";
+                // सीधे मदर JSON से डेटा उठाना (बिना index.js के झंझट के)
+                const target = "https://draw.ar-lottery01.com/WinGo/WinGo_1M/GetHistoryIssuePage.json?ts=" + Date.now();
+                const response = await fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent(target));
+                const data = await response.json();
+
+                if (data && data.list) {
+                    const last = data.list[0];
+                    document.getElementById('round').innerText = "ROUND: " + (parseInt(last.issueNumber) + 1);
+                    const pred = last.number >= 5 ? "SMALL" : "BIG";
+                    const resBox = document.getElementById('result');
+                    resBox.innerText = pred;
+                    resBox.style.color = pred === 'BIG' ? 'gold' : '#0f0';
+                    resBox.style.borderColor = pred === 'BIG' ? 'gold' : '#0f0';
                 }
             } catch (e) {
-                document.getElementById('statusText').innerText = "○ Connection Lost";
-                document.getElementById('statusText').style.color = "red";
+                document.getElementById('round').innerText = "RECONNECTING...";
             }
         }
-
-        setInterval(updateDashboard, 2000);
-        updateDashboard();
+        setInterval(startSync, 3000);
+        startSync();
     </script>
 </body>
-  </html>
+</html>
